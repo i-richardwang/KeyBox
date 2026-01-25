@@ -33,9 +33,6 @@ interface LoginTableProps {
   onDelete: (id: string) => void;
 }
 
-/**
- * Table for displaying email/login accounts with password and 2FA
- */
 export function LoginTable({ accounts, onUpdate, onDelete }: LoginTableProps) {
   const [editingAccount, setEditingAccount] = useState<EmailAccount | null>(null);
   const [deletingAccount, setDeletingAccount] = useState<EmailAccount | null>(null);

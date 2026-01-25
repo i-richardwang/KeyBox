@@ -9,12 +9,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  Add01Icon,
-  Download04Icon,
-  Upload04Icon,
-  MoreHorizontalIcon,
-} from "@hugeicons/core-free-icons";
+import { Add01Icon, MoreVerticalIcon, FileExportIcon, FileImportIcon } from "@hugeicons/core-free-icons";
+import { SettingsSheet } from "./settings-sheet";
 import type { ImportResult } from "@/lib/import-export";
 
 interface VaultHeaderProps {
@@ -24,9 +20,6 @@ interface VaultHeaderProps {
   onImportComplete: (result: ImportResult) => void;
 }
 
-/**
- * Header component with title, add button, and import/export menu
- */
 export function VaultHeader({
   onAddClick,
   onExport,
@@ -45,53 +38,49 @@ export function VaultHeader({
       const result = await onImport(file);
       onImportComplete(result);
     }
-    // Reset input to allow re-importing the same file
+    // Reset input so same file can be selected again
     e.target.value = "";
   };
 
   return (
     <div className="flex items-center justify-between">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Vault Key</h1>
-        <p className="text-muted-foreground text-sm">
-          Manage your accounts and API keys
-        </p>
-      </div>
+      <h1 className="text-2xl font-bold">Vault Key</h1>
 
       <div className="flex items-center gap-2">
+        <SettingsSheet />
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="icon">
-              <HugeiconsIcon icon={MoreHorizontalIcon} strokeWidth={2} />
+              <HugeiconsIcon icon={MoreVerticalIcon} strokeWidth={2} />
               <span className="sr-only">More options</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleImportClick}>
-              <HugeiconsIcon icon={Upload04Icon} strokeWidth={2} />
-              Import
-            </DropdownMenuItem>
             <DropdownMenuItem onClick={onExport}>
-              <HugeiconsIcon icon={Download04Icon} strokeWidth={2} />
+              <HugeiconsIcon icon={FileExportIcon} strokeWidth={2} />
               Export
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleImportClick}>
+              <HugeiconsIcon icon={FileImportIcon} strokeWidth={2} />
+              Import
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
         <Button onClick={onAddClick}>
-          <HugeiconsIcon icon={Add01Icon} strokeWidth={2} data-icon="inline-start" />
+          <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />
           Add Account
         </Button>
-      </div>
 
-      {/* Hidden file input for import */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".json,application/json"
-        onChange={handleFileChange}
-        className="hidden"
-      />
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json"
+          onChange={handleFileChange}
+          className="hidden"
+        />
+      </div>
     </div>
   );
 }

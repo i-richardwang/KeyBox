@@ -1,15 +1,23 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import type { Account, NewAccount, VaultStorage } from "@/lib/types/account";
+import type { Account, NewAccount, VaultStorage, CustomLoginType, CustomApiProvider } from "@/lib/types/account";
 import { STORAGE_KEY } from "@/lib/types/account";
 import {
   exportAccounts as exportAccountsUtil,
   parseImportFile,
   mergeAccounts,
+  mergeCustomTypes,
   readFileAsText,
   type ImportResult,
+  type ExportData,
 } from "@/lib/import-export";
+
+interface ImportCallbacks {
+  customLoginTypes: CustomLoginType[];
+  customApiProviders: CustomApiProvider[];
+  onImportCustomTypes: (loginTypes: CustomLoginType[], apiProviders: CustomApiProvider[]) => void;
+}
 
 /**
  * Hook for managing accounts with localStorage persistence
@@ -30,7 +38,23 @@ export function useAccounts() {
 
   // Persist to localStorage
   const persist = useCallback((updated: Account[]) => {
-    const data: VaultStorage = { version: 1, accounts: updated };
+    // Read existing data to preserve custom types
+    const stored = localStorage.getItem(STORAGE_KEY);
+    let existingData: VaultStorage = { version: 2, accounts: [] };
+
+    if (stored) {
+      try {
+        existingData = JSON.parse(stored);
+      } catch {
+        // Use defaults
+      }
+    }
+
+    const data: VaultStorage = {
+      ...existingData,
+      version: 2,
+      accounts: updated,
+    };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   }, []);
 
@@ -81,14 +105,20 @@ export function useAccounts() {
     [persist]
   );
 
-  // Export accounts to JSON file
-  const exportAccounts = useCallback(() => {
-    exportAccountsUtil(accounts);
+  // Export accounts to JSON file (needs custom types from caller)
+  const exportAccounts = useCallback((
+    customLoginTypes: CustomLoginType[],
+    customApiProviders: CustomApiProvider[]
+  ) => {
+    exportAccountsUtil(accounts, customLoginTypes, customApiProviders);
   }, [accounts]);
 
   // Import accounts from file with smart merge
   const importAccounts = useCallback(
-    async (file: File): Promise<ImportResult> => {
+    async (
+      file: File,
+      callbacks: ImportCallbacks
+    ): Promise<ImportResult> => {
       try {
         const content = await readFileAsText(file);
         const data = parseImportFile(content);
@@ -97,12 +127,36 @@ export function useAccounts() {
           return { success: false, added: 0, updated: 0, error: "Invalid file format" };
         }
 
-        const { accounts: merged, added, updated } = mergeAccounts(accounts, data.accounts);
+        // Merge accounts
+        const { accounts: mergedAccounts, added: accountsAdded, updated: accountsUpdated } =
+          mergeAccounts(accounts, data.accounts);
 
-        setAccounts(merged);
-        persist(merged);
+        // Merge custom types if present (v2 format)
+        let totalAdded = accountsAdded;
+        let totalUpdated = accountsUpdated;
 
-        return { success: true, added, updated };
+        const exportData = data as ExportData;
+        if (exportData.customLoginTypes || exportData.customApiProviders) {
+          const importedLoginTypes = exportData.customLoginTypes || [];
+          const importedApiProviders = exportData.customApiProviders || [];
+
+          const { types: mergedLoginTypes, added: loginAdded, updated: loginUpdated } =
+            mergeCustomTypes(callbacks.customLoginTypes, importedLoginTypes);
+
+          const { types: mergedApiProviders, added: apiAdded, updated: apiUpdated } =
+            mergeCustomTypes(callbacks.customApiProviders, importedApiProviders);
+
+          totalAdded += loginAdded + apiAdded;
+          totalUpdated += loginUpdated + apiUpdated;
+
+          // Update custom types via callback
+          callbacks.onImportCustomTypes(mergedLoginTypes, mergedApiProviders);
+        }
+
+        setAccounts(mergedAccounts);
+        persist(mergedAccounts);
+
+        return { success: true, added: totalAdded, updated: totalUpdated };
       } catch {
         return { success: false, added: 0, updated: 0, error: "Failed to read file" };
       }

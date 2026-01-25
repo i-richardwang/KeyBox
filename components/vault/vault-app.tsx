@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { toast } from "sonner";
 import { useAccounts } from "@/hooks/use-accounts";
+import { CustomTypesProvider, useCustomTypes } from "@/context/custom-types-context";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { VaultHeader } from "@/components/vault/vault-header";
 import { LoginTable } from "@/components/vault/login-table";
@@ -11,26 +12,30 @@ import { AccountDialog } from "@/components/vault/account-dialog";
 import { EmptyState } from "@/components/vault/empty-state";
 import type { AccountFormData } from "@/components/vault/account-form";
 import type { EmailAccount, ApiKeyAccount } from "@/lib/types/account";
-import { isEmailAccount, isApiKeyAccount } from "@/lib/types/account";
+import { isApiKeyAccount, isPresetLoginType } from "@/lib/types/account";
 import type { ImportResult } from "@/lib/import-export";
 
 type FilterTab = "logins" | "api-keys";
 
-export function VaultApp() {
+function VaultContent() {
   const { accounts, addAccount, updateAccount, deleteAccount, exportAccounts, importAccounts } = useAccounts();
+  const { loginTypes, apiProviders, importCustomTypes } = useCustomTypes();
+
   const [addDialogOpen, setAddDialogOpen] = useState(false);
 
-  const loginAccounts = useMemo(
-    () => accounts.filter(isEmailAccount) as EmailAccount[],
-    [accounts]
-  );
+  // Filter accounts by type
+  const loginAccounts = useMemo(() => {
+    return accounts.filter((account) => {
+      if (isApiKeyAccount(account)) return false;
+      return isPresetLoginType(account.type) || loginTypes.some((ct) => ct.id === account.type);
+    }) as EmailAccount[];
+  }, [accounts, loginTypes]);
 
   const apiKeyAccounts = useMemo(
     () => accounts.filter(isApiKeyAccount) as ApiKeyAccount[],
     [accounts]
   );
 
-  // Default to "logins" tab, or "api-keys" if no logins exist
   const defaultTab: FilterTab = loginAccounts.length > 0 ? "logins" : "api-keys";
   const [activeTab, setActiveTab] = useState<FilterTab>(defaultTab);
 
@@ -50,6 +55,18 @@ export function VaultApp() {
       });
     }
   };
+
+  const handleExport = useCallback(() => {
+    exportAccounts(loginTypes, apiProviders);
+  }, [exportAccounts, loginTypes, apiProviders]);
+
+  const handleImport = useCallback(async (file: File) => {
+    return importAccounts(file, {
+      customLoginTypes: loginTypes,
+      customApiProviders: apiProviders,
+      onImportCustomTypes: importCustomTypes,
+    });
+  }, [importAccounts, loginTypes, apiProviders, importCustomTypes]);
 
   const handleImportComplete = (result: ImportResult) => {
     if (result.success) {
@@ -71,8 +88,8 @@ export function VaultApp() {
       <div className="container mx-auto px-4 py-8 max-w-5xl">
         <VaultHeader
           onAddClick={() => setAddDialogOpen(true)}
-          onExport={exportAccounts}
-          onImport={importAccounts}
+          onExport={handleExport}
+          onImport={handleImport}
           onImportComplete={handleImportComplete}
         />
 
@@ -124,5 +141,13 @@ export function VaultApp() {
         />
       </div>
     </div>
+  );
+}
+
+export function VaultApp() {
+  return (
+    <CustomTypesProvider>
+      <VaultContent />
+    </CustomTypesProvider>
   );
 }

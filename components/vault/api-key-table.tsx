@@ -32,9 +32,6 @@ interface ApiKeyTableProps {
   onDelete: (id: string) => void;
 }
 
-/**
- * Table for displaying API key accounts
- */
 export function ApiKeyTable({ accounts, onUpdate, onDelete }: ApiKeyTableProps) {
   const [editingAccount, setEditingAccount] = useState<ApiKeyAccount | null>(null);
   const [deletingAccount, setDeletingAccount] = useState<ApiKeyAccount | null>(null);
@@ -52,6 +49,11 @@ export function ApiKeyTable({ accounts, onUpdate, onDelete }: ApiKeyTableProps) 
       onDelete(deletingAccount.id);
       setDeletingAccount(null);
     }
+  };
+
+  // Get display name for account (for delete dialog)
+  const getAccountName = (account: ApiKeyAccount): string => {
+    return API_PROVIDER_LABELS[account.provider as keyof typeof API_PROVIDER_LABELS] || account.provider;
   };
 
   return (
@@ -116,7 +118,7 @@ export function ApiKeyTable({ accounts, onUpdate, onDelete }: ApiKeyTableProps) 
         open={!!deletingAccount}
         onOpenChange={(open) => !open && setDeletingAccount(null)}
         onConfirm={handleDeleteConfirm}
-        accountName={deletingAccount ? API_PROVIDER_LABELS[deletingAccount.provider] : ""}
+        accountName={deletingAccount ? getAccountName(deletingAccount) : ""}
       />
     </>
   );

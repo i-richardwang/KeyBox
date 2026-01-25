@@ -1,12 +1,14 @@
-import type { Account, VaultStorage, ApiProvider } from "@/lib/types/account";
-import { isEmailAccount, API_PROVIDERS } from "@/lib/types/account";
+import type { Account, VaultStorage, CustomLoginType, CustomApiProvider } from "@/lib/types/account";
+import { isEmailAccount } from "@/lib/types/account";
 
 // Export file format with metadata
 export interface ExportData {
-  version: 1;
+  version: 2;
   source: "vault-key";
   exportedAt: number;
   accounts: Account[];
+  customLoginTypes: CustomLoginType[];
+  customApiProviders: CustomApiProvider[];
 }
 
 // Result of import operation
@@ -18,14 +20,20 @@ export interface ImportResult {
 }
 
 /**
- * Export accounts to a JSON file and trigger download
+ * Export accounts and custom types to a JSON file and trigger download
  */
-export function exportAccounts(accounts: Account[]): void {
+export function exportAccounts(
+  accounts: Account[],
+  customLoginTypes: CustomLoginType[],
+  customApiProviders: CustomApiProvider[]
+): void {
   const data: ExportData = {
-    version: 1,
+    version: 2,
     source: "vault-key",
     exportedAt: Date.now(),
     accounts,
+    customLoginTypes,
+    customApiProviders,
   };
 
   const json = JSON.stringify(data, null, 2);
@@ -54,15 +62,15 @@ function getAccountKey(account: Account): string {
 }
 
 /**
- * Validate imported data structure
+ * Validate imported data structure (supports v1 and v2)
  */
 function validateImportData(data: unknown): data is ExportData | VaultStorage {
   if (!data || typeof data !== "object") return false;
 
   const obj = data as Record<string, unknown>;
 
-  // Check for valid version
-  if (obj.version !== 1) return false;
+  // Check for valid version (1 or 2)
+  if (obj.version !== 1 && obj.version !== 2) return false;
 
   // Check for accounts array
   if (!Array.isArray(obj.accounts)) return false;
@@ -73,16 +81,22 @@ function validateImportData(data: unknown): data is ExportData | VaultStorage {
     if (!("type" in account)) return false;
 
     const acc = account as Record<string, unknown>;
-    if (acc.type === "gmail" || acc.type === "outlook") {
+
+    // Check if it's an email account (not api-key type)
+    if (acc.type !== "api-key") {
       if (!("email" in acc) || !("password" in acc)) return false;
-    } else if (acc.type === "api-key") {
-      if (!("provider" in acc) || !("apiKey" in acc)) return false;
-      // Validate provider is a known ApiProvider
-      if (!API_PROVIDERS.includes(acc.provider as ApiProvider)) return false;
+      // For v2, allow custom login types
+      if (typeof acc.type !== "string") return false;
     } else {
-      return false;
+      // API key account
+      if (!("provider" in acc) || !("apiKey" in acc)) return false;
+      if (typeof acc.provider !== "string") return false;
     }
   }
+
+  // Validate custom types if present (v2)
+  if (obj.customLoginTypes && !Array.isArray(obj.customLoginTypes)) return false;
+  if (obj.customApiProviders && !Array.isArray(obj.customApiProviders)) return false;
 
   return true;
 }
@@ -90,7 +104,7 @@ function validateImportData(data: unknown): data is ExportData | VaultStorage {
 /**
  * Parse and validate import file content
  */
-export function parseImportFile(content: string): ExportData | VaultStorage | null {
+export function parseImportFile(content: string): (ExportData | VaultStorage) | null {
   try {
     const data = JSON.parse(content);
     if (validateImportData(data)) {
@@ -151,6 +165,49 @@ export function mergeAccounts(
 
   return {
     accounts: Array.from(existingMap.values()),
+    added,
+    updated,
+  };
+}
+
+/**
+ * Merge imported custom types with existing ones
+ */
+export function mergeCustomTypes<T extends { id: string; label: string }>(
+  existing: T[],
+  imported: T[]
+): { types: T[]; added: number; updated: number } {
+  const existingMap = new Map<string, T>();
+
+  // Build map of existing types by label (case-insensitive)
+  for (const type of existing) {
+    existingMap.set(type.label.toLowerCase(), type);
+  }
+
+  let added = 0;
+  let updated = 0;
+
+  // Process imported types
+  for (const importedType of imported) {
+    const key = importedType.label.toLowerCase();
+    const existingType = existingMap.get(key);
+
+    if (existingType) {
+      // Update existing type, preserve id
+      existingMap.set(key, {
+        ...importedType,
+        id: existingType.id,
+      });
+      updated++;
+    } else {
+      // Add new type
+      existingMap.set(key, importedType);
+      added++;
+    }
+  }
+
+  return {
+    types: Array.from(existingMap.values()),
     added,
     updated,
   };

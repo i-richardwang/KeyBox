@@ -13,13 +13,10 @@ import type { Account } from "@/lib/types/account";
 interface AccountDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  account?: Account; // If provided, dialog is in edit mode
+  account?: Account;
   onSubmit: (data: AccountFormData) => void;
 }
 
-/**
- * Dialog for adding or editing an account
- */
 export function AccountDialog({
   open,
   onOpenChange,
@@ -33,6 +30,8 @@ export function AccountDialog({
     onOpenChange(false);
   };
 
+  const formKey = account?.id ?? "new";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -44,11 +43,14 @@ export function AccountDialog({
               : "Enter the details for your new account."}
           </DialogDescription>
         </DialogHeader>
-        <AccountForm
-          initialData={account}
-          onSubmit={handleSubmit}
-          onCancel={() => onOpenChange(false)}
-        />
+        {open && (
+          <AccountForm
+            key={formKey}
+            initialData={account}
+            onSubmit={handleSubmit}
+            onCancel={() => onOpenChange(false)}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );

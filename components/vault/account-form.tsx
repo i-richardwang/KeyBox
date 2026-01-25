@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,17 +11,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Account, LoginType, ApiProvider } from "@/lib/types/account";
-import { API_PROVIDERS, API_PROVIDER_LABELS, isEmailAccount } from "@/lib/types/account";
+import { useCustomTypes } from "@/context/custom-types-context";
+import type { Account, PresetLoginType, PresetApiProvider } from "@/lib/types/account";
+import {
+  PRESET_LOGIN_TYPES,
+  PRESET_API_PROVIDERS,
+  LOGIN_TYPE_LABELS,
+  API_PROVIDER_LABELS,
+  LOGIN_TYPE_COLORS,
+  API_PROVIDER_COLORS,
+  isEmailAccount,
+} from "@/lib/types/account";
+import { TypeSelector } from "./type-selector";
 
-// Top-level category
 type AccountCategory = "login" | "api-key";
 
-// Form data for creating/editing an account
 export interface AccountFormData {
   category: AccountCategory;
-  loginType?: LoginType;
-  provider?: ApiProvider;
+  loginType?: string;
+  provider?: string;
   email?: string;
   password?: string;
   totpSecret?: string;
@@ -34,40 +42,69 @@ interface AccountFormProps {
   onCancel: () => void;
 }
 
-/**
- * Form for creating or editing an account
- */
-export function AccountForm({ initialData, onSubmit, onCancel }: AccountFormProps) {
-  // Determine initial category based on existing data
-  const getInitialCategory = (): AccountCategory => {
-    if (!initialData) return "login";
-    return initialData.type === "api-key" ? "api-key" : "login";
+// Build preset options for TypeSelector
+const loginTypePresets = PRESET_LOGIN_TYPES.map((type) => ({
+  value: type,
+  label: LOGIN_TYPE_LABELS[type as PresetLoginType],
+  color: LOGIN_TYPE_COLORS[type as PresetLoginType],
+  isPreset: true,
+}));
+
+const apiProviderPresets = PRESET_API_PROVIDERS.map((provider) => ({
+  value: provider,
+  label: API_PROVIDER_LABELS[provider as PresetApiProvider],
+  color: API_PROVIDER_COLORS[provider as PresetApiProvider],
+  isPreset: true,
+}));
+
+function getInitialValues(initialData?: Account) {
+  if (!initialData) {
+    return {
+      category: "login" as AccountCategory,
+      loginType: "gmail",
+      provider: "openai",
+      email: "",
+      password: "",
+      totpSecret: "",
+      apiKey: "",
+    };
+  }
+
+  if (isEmailAccount(initialData)) {
+    return {
+      category: "login" as AccountCategory,
+      loginType: initialData.type,
+      provider: "openai",
+      email: initialData.email,
+      password: initialData.password,
+      totpSecret: initialData.totpSecret || "",
+      apiKey: "",
+    };
+  }
+
+  return {
+    category: "api-key" as AccountCategory,
+    loginType: "gmail",
+    provider: initialData.provider,
+    email: "",
+    password: "",
+    totpSecret: "",
+    apiKey: initialData.apiKey,
   };
+}
 
-  const [category, setCategory] = useState<AccountCategory>(getInitialCategory());
-  const [loginType, setLoginType] = useState<LoginType>("gmail");
-  const [provider, setProvider] = useState<ApiProvider>("openai");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [totpSecret, setTotpSecret] = useState("");
-  const [apiKey, setApiKey] = useState("");
+export function AccountForm({ initialData, onSubmit, onCancel }: AccountFormProps) {
+  const { loginTypes, apiProviders, addLoginType, addApiProvider } = useCustomTypes();
 
-  // Initialize form with existing data when editing
-  useEffect(() => {
-    if (initialData) {
-      if (isEmailAccount(initialData)) {
-        setCategory("login");
-        setLoginType(initialData.type);
-        setEmail(initialData.email);
-        setPassword(initialData.password);
-        setTotpSecret(initialData.totpSecret || "");
-      } else {
-        setCategory("api-key");
-        setProvider(initialData.provider);
-        setApiKey(initialData.apiKey);
-      }
-    }
-  }, [initialData]);
+  const initial = getInitialValues(initialData);
+
+  const [category, setCategory] = useState<AccountCategory>(initial.category);
+  const [loginType, setLoginType] = useState<string>(initial.loginType);
+  const [provider, setProvider] = useState<string>(initial.provider);
+  const [email, setEmail] = useState(initial.email);
+  const [password, setPassword] = useState(initial.password);
+  const [totpSecret, setTotpSecret] = useState(initial.totpSecret);
+  const [apiKey, setApiKey] = useState(initial.apiKey);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,7 +117,6 @@ export function AccountForm({ initialData, onSubmit, onCancel }: AccountFormProp
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Category Selection */}
       <div className="space-y-2">
         <Label htmlFor="category">Category</Label>
         <Select
@@ -100,22 +136,19 @@ export function AccountForm({ initialData, onSubmit, onCancel }: AccountFormProp
 
       {category === "login" ? (
         <>
-          {/* Login Type Selection */}
           <div className="space-y-2">
-            <Label htmlFor="loginType">Type</Label>
-            <Select
+            <Label>Type</Label>
+            <TypeSelector
               value={loginType}
-              onValueChange={(value) => setLoginType(value as LoginType)}
+              onChange={setLoginType}
+              presets={loginTypePresets}
+              customTypes={loginTypes}
+              onAddCustomType={addLoginType}
+              placeholder="Select type..."
               disabled={!!initialData}
-            >
-              <SelectTrigger id="loginType" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="gmail">Gmail</SelectItem>
-                <SelectItem value="outlook">Outlook</SelectItem>
-              </SelectContent>
-            </Select>
+              addDialogTitle="Add Login Type"
+              addDialogPlaceholder="e.g., iCloud, GitHub"
+            />
           </div>
 
           <div className="space-y-2">
@@ -155,25 +188,19 @@ export function AccountForm({ initialData, onSubmit, onCancel }: AccountFormProp
         </>
       ) : (
         <>
-          {/* Provider Selection */}
           <div className="space-y-2">
-            <Label htmlFor="provider">Provider</Label>
-            <Select
+            <Label>Provider</Label>
+            <TypeSelector
               value={provider}
-              onValueChange={(value) => setProvider(value as ApiProvider)}
+              onChange={setProvider}
+              presets={apiProviderPresets}
+              customTypes={apiProviders}
+              onAddCustomType={addApiProvider}
+              placeholder="Select provider..."
               disabled={!!initialData}
-            >
-              <SelectTrigger id="provider" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {API_PROVIDERS.map((p) => (
-                  <SelectItem key={p} value={p}>
-                    {API_PROVIDER_LABELS[p]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              addDialogTitle="Add API Provider"
+              addDialogPlaceholder="e.g., GitHub, Stripe"
+            />
           </div>
 
           <div className="space-y-2">

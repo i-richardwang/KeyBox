@@ -1,33 +1,58 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import type { LoginType, ApiProvider } from "@/lib/types/account";
-import { LOGIN_TYPE_LABELS, API_PROVIDER_LABELS } from "@/lib/types/account";
-
-type BadgeType = LoginType | ApiProvider;
+import { cn } from "@/lib/utils";
+import { getBadgeClass } from "@/lib/colors";
+import { useCustomTypes } from "@/context/custom-types-context";
+import type { PresetLoginType, PresetApiProvider } from "@/lib/types/account";
+import {
+  LOGIN_TYPE_LABELS,
+  API_PROVIDER_LABELS,
+  LOGIN_TYPE_COLORS,
+  API_PROVIDER_COLORS,
+  isPresetLoginType,
+  isPresetApiProvider,
+} from "@/lib/types/account";
 
 interface TypeBadgeProps {
-  type: BadgeType;
+  type: string;
 }
-
-// Badge variants by type
-const badgeVariants: Record<BadgeType, "default" | "secondary" | "outline"> = {
-  gmail: "default",
-  outlook: "secondary",
-  ollama: "outline",
-  openai: "outline",
-  anthropic: "outline",
-  cerebras: "outline",
-  tavily: "outline",
-};
 
 /**
  * Displays a badge indicating the login type or API provider
+ * Supports both preset types and custom types with dynamic colors
  */
 export function TypeBadge({ type }: TypeBadgeProps) {
-  const label = type in API_PROVIDER_LABELS
-    ? API_PROVIDER_LABELS[type as ApiProvider]
-    : LOGIN_TYPE_LABELS[type as LoginType];
+  const { loginTypes, apiProviders } = useCustomTypes();
 
-  return <Badge variant={badgeVariants[type]}>{label}</Badge>;
+  let label: string;
+  let color: string;
+
+  if (isPresetLoginType(type)) {
+    label = LOGIN_TYPE_LABELS[type as PresetLoginType];
+    color = LOGIN_TYPE_COLORS[type as PresetLoginType];
+  } else if (isPresetApiProvider(type)) {
+    label = API_PROVIDER_LABELS[type as PresetApiProvider];
+    color = API_PROVIDER_COLORS[type as PresetApiProvider];
+  } else {
+    const customLogin = loginTypes.find((ct) => ct.id === type);
+    if (customLogin) {
+      label = customLogin.label;
+      color = customLogin.color;
+    } else {
+      const customApi = apiProviders.find((cp) => cp.id === type);
+      if (customApi) {
+        label = customApi.label;
+        color = customApi.color;
+      } else {
+        label = type;
+        color = "slate";
+      }
+    }
+  }
+
+  return (
+    <span className={cn("px-2.5 py-0.5 rounded-md text-xs font-medium", getBadgeClass(color))}>
+      {label}
+    </span>
+  );
 }
