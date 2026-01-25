@@ -1,12 +1,4 @@
-// Preset login types
-export const PRESET_LOGIN_TYPES = ["gmail", "outlook"] as const;
-export type PresetLoginType = (typeof PRESET_LOGIN_TYPES)[number];
-
-// Preset API providers
-export const PRESET_API_PROVIDERS = ["ollama", "openai", "anthropic", "cerebras", "tavily"] as const;
-export type PresetApiProvider = (typeof PRESET_API_PROVIDERS)[number];
-
-// Color palette for custom types
+// Color palette for types
 export const COLOR_PALETTE = [
   "red", "orange", "amber", "yellow",
   "lime", "green", "emerald", "teal",
@@ -17,36 +9,8 @@ export const COLOR_PALETTE = [
 
 export type ColorName = (typeof COLOR_PALETTE)[number];
 
-// Display labels for presets
-export const LOGIN_TYPE_LABELS: Record<PresetLoginType, string> = {
-  gmail: "Gmail",
-  outlook: "Outlook",
-};
-
-export const API_PROVIDER_LABELS: Record<PresetApiProvider, string> = {
-  ollama: "Ollama",
-  openai: "OpenAI",
-  anthropic: "Anthropic",
-  cerebras: "Cerebras",
-  tavily: "Tavily",
-};
-
-// Colors for presets (must be valid ColorName)
-export const LOGIN_TYPE_COLORS: Record<PresetLoginType, ColorName> = {
-  gmail: "red",
-  outlook: "blue",
-};
-
-export const API_PROVIDER_COLORS: Record<PresetApiProvider, ColorName> = {
-  ollama: "slate",
-  openai: "emerald",
-  anthropic: "orange",
-  cerebras: "purple",
-  tavily: "cyan",
-};
-
-// Custom type definition
-export interface CustomType {
+// Type definition for login types and API providers
+export interface TypeDefinition {
   id: string;
   label: string;
   color: string;
@@ -60,7 +24,7 @@ interface BaseAccount {
   updatedAt: number;
 }
 
-// Email account (Gmail, Outlook, or custom)
+// Login account (Gmail, Outlook, etc.)
 export interface EmailAccount extends BaseAccount {
   type: string;
   email: string;
@@ -84,14 +48,6 @@ export type NewApiKeyAccount = Omit<ApiKeyAccount, "id" | "createdAt" | "updated
 export type NewAccount = NewEmailAccount | NewApiKeyAccount;
 
 // Type guards
-export function isPresetLoginType(type: string): type is PresetLoginType {
-  return PRESET_LOGIN_TYPES.includes(type as PresetLoginType);
-}
-
-export function isPresetApiProvider(provider: string): provider is PresetApiProvider {
-  return PRESET_API_PROVIDERS.includes(provider as PresetApiProvider);
-}
-
 export function isEmailAccount(account: Account): account is EmailAccount {
   return account.type !== "api-key";
 }
@@ -99,3 +55,18 @@ export function isEmailAccount(account: Account): account is EmailAccount {
 export function isApiKeyAccount(account: Account): account is ApiKeyAccount {
   return account.type === "api-key";
 }
+
+// Default login types (used for initial store setup)
+export const DEFAULT_LOGIN_TYPES: TypeDefinition[] = [
+  { id: "gmail", label: "Gmail", color: "red", createdAt: 0 },
+  { id: "outlook", label: "Outlook", color: "blue", createdAt: 0 },
+];
+
+// Default API providers (used for initial store setup)
+export const DEFAULT_API_PROVIDERS: TypeDefinition[] = [
+  { id: "ollama", label: "Ollama", color: "slate", createdAt: 0 },
+  { id: "openai", label: "OpenAI", color: "emerald", createdAt: 0 },
+  { id: "anthropic", label: "Anthropic", color: "orange", createdAt: 0 },
+  { id: "cerebras", label: "Cerebras", color: "purple", createdAt: 0 },
+  { id: "tavily", label: "Tavily", color: "cyan", createdAt: 0 },
+];

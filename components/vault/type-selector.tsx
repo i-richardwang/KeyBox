@@ -20,21 +20,14 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowDown01Icon, Add01Icon } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
 import { getBadgeClass } from "@/lib/colors";
-import type { CustomType } from "@/lib/types/account";
+import type { TypeDefinition } from "@/lib/types/account";
 import { TypeDialog } from "./type-dialog";
-
-interface TypeOption {
-  value: string;
-  label: string;
-  color: string;
-}
 
 interface TypeSelectorProps {
   value: string;
   onChange: (value: string) => void;
-  presets: TypeOption[];
-  customTypes: CustomType[];
-  onAddCustomType: (label: string, color: string) => CustomType;
+  types: TypeDefinition[];
+  onAddType: (label: string, color: string) => TypeDefinition;
   placeholder?: string;
   disabled?: boolean;
   addDialogTitle: string;
@@ -50,9 +43,8 @@ function ColorDot({ color }: { color: string }) {
 export function TypeSelector({
   value,
   onChange,
-  presets,
-  customTypes,
-  onAddCustomType,
+  types,
+  onAddType,
   placeholder = "Select type...",
   disabled = false,
   addDialogTitle,
@@ -61,20 +53,10 @@ export function TypeSelector({
   const [open, setOpen] = useState(false);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
 
-  // Combine presets and custom types
-  const allOptions: TypeOption[] = [
-    ...presets,
-    ...customTypes.map((ct) => ({
-      value: ct.id,
-      label: ct.label,
-      color: ct.color,
-    })),
-  ];
+  const selectedType = types.find((t) => t.id === value);
 
-  const selectedOption = allOptions.find((opt) => opt.value === value);
-
-  const handleAddCustomType = (label: string, color: string) => {
-    const newType = onAddCustomType(label, color);
+  const handleAddType = (label: string, color: string) => {
+    const newType = onAddType(label, color);
     onChange(newType.id);
   };
 
@@ -89,10 +71,10 @@ export function TypeSelector({
             disabled={disabled}
             className="w-full justify-between font-normal"
           >
-            {selectedOption ? (
+            {selectedType ? (
               <span className="flex items-center gap-2">
-                <ColorDot color={selectedOption.color} />
-                {selectedOption.label}
+                <ColorDot color={selectedType.color} />
+                {selectedType.label}
               </span>
             ) : (
               <span className="text-muted-foreground">{placeholder}</span>
@@ -110,44 +92,22 @@ export function TypeSelector({
             <CommandList>
               <CommandEmpty>No results found.</CommandEmpty>
 
-              <CommandGroup heading="Presets">
-                {presets.map((option) => (
+              <CommandGroup>
+                {types.map((type) => (
                   <CommandItem
-                    key={option.value}
-                    value={option.label}
-                    data-checked={value === option.value}
+                    key={type.id}
+                    value={type.label}
+                    data-checked={value === type.id}
                     onSelect={() => {
-                      onChange(option.value);
+                      onChange(type.id);
                       setOpen(false);
                     }}
                   >
-                    <ColorDot color={option.color} />
-                    {option.label}
+                    <ColorDot color={type.color} />
+                    {type.label}
                   </CommandItem>
                 ))}
               </CommandGroup>
-
-              {customTypes.length > 0 && (
-                <>
-                  <CommandSeparator />
-                  <CommandGroup heading="Custom">
-                    {customTypes.map((ct) => (
-                      <CommandItem
-                        key={ct.id}
-                        value={ct.label}
-                        data-checked={value === ct.id}
-                        onSelect={() => {
-                          onChange(ct.id);
-                          setOpen(false);
-                        }}
-                      >
-                        <ColorDot color={ct.color} />
-                        {ct.label}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </>
-              )}
 
               <CommandSeparator />
               <CommandGroup>
@@ -170,7 +130,7 @@ export function TypeSelector({
       <TypeDialog
         open={addDialogOpen}
         onOpenChange={setAddDialogOpen}
-        onSubmit={handleAddCustomType}
+        onSubmit={handleAddType}
         title={addDialogTitle}
         placeholder={addDialogPlaceholder}
       />

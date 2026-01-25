@@ -1,10 +1,11 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { Account, NewAccount, CustomType } from "@/lib/types/account";
+import type { Account, NewAccount, TypeDefinition } from "@/lib/types/account";
+import { DEFAULT_LOGIN_TYPES, DEFAULT_API_PROVIDERS } from "@/lib/types/account";
 import {
   parseImportFile,
   mergeAccounts,
-  mergeCustomTypes,
+  mergeTypes,
   readFileAsText,
   type ImportResult,
   type ExportData,
@@ -12,27 +13,23 @@ import {
 
 interface VaultState {
   accounts: Account[];
-  customLoginTypes: CustomType[];
-  customApiProviders: CustomType[];
+  loginTypes: TypeDefinition[];
+  apiProviders: TypeDefinition[];
 }
 
 interface VaultActions {
-  // Account actions
   addAccount: (data: NewAccount) => void;
   updateAccount: (id: string, data: Partial<Omit<Account, "id" | "type" | "createdAt">>) => void;
   deleteAccount: (id: string) => void;
 
-  // Custom login type actions
-  addLoginType: (label: string, color: string) => CustomType;
-  updateLoginType: (id: string, data: Partial<Pick<CustomType, "label" | "color">>) => void;
+  addLoginType: (label: string, color: string) => TypeDefinition;
+  updateLoginType: (id: string, data: Partial<Pick<TypeDefinition, "label" | "color">>) => void;
   deleteLoginType: (id: string) => void;
 
-  // Custom API provider actions
-  addApiProvider: (label: string, color: string) => CustomType;
-  updateApiProvider: (id: string, data: Partial<Pick<CustomType, "label" | "color">>) => void;
+  addApiProvider: (label: string, color: string) => TypeDefinition;
+  updateApiProvider: (id: string, data: Partial<Pick<TypeDefinition, "label" | "color">>) => void;
   deleteApiProvider: (id: string) => void;
 
-  // Import/Export
   exportData: () => void;
   importData: (file: File) => Promise<ImportResult>;
 }
@@ -42,12 +39,10 @@ type VaultStore = VaultState & VaultActions;
 export const useVaultStore = create<VaultStore>()(
   persist(
     (set, get) => ({
-      // Initial state
       accounts: [],
-      customLoginTypes: [],
-      customApiProviders: [],
+      loginTypes: [...DEFAULT_LOGIN_TYPES],
+      apiProviders: [...DEFAULT_API_PROVIDERS],
 
-      // Account actions
       addAccount: (data) => {
         const now = Date.now();
         const account = {
@@ -78,17 +73,16 @@ export const useVaultStore = create<VaultStore>()(
         }));
       },
 
-      // Custom login type actions
       addLoginType: (label, color) => {
-        const newType: CustomType = {
-          id: `custom-login-${crypto.randomUUID()}`,
+        const newType: TypeDefinition = {
+          id: `login-${crypto.randomUUID()}`,
           label,
           color,
           createdAt: Date.now(),
         };
 
         set((state) => ({
-          customLoginTypes: [...state.customLoginTypes, newType],
+          loginTypes: [...state.loginTypes, newType],
         }));
 
         return newType;
@@ -96,7 +90,7 @@ export const useVaultStore = create<VaultStore>()(
 
       updateLoginType: (id, data) => {
         set((state) => ({
-          customLoginTypes: state.customLoginTypes.map((t) =>
+          loginTypes: state.loginTypes.map((t) =>
             t.id === id ? { ...t, ...data } : t
           ),
         }));
@@ -104,21 +98,20 @@ export const useVaultStore = create<VaultStore>()(
 
       deleteLoginType: (id) => {
         set((state) => ({
-          customLoginTypes: state.customLoginTypes.filter((t) => t.id !== id),
+          loginTypes: state.loginTypes.filter((t) => t.id !== id),
         }));
       },
 
-      // Custom API provider actions
       addApiProvider: (label, color) => {
-        const newProvider: CustomType = {
-          id: `custom-api-${crypto.randomUUID()}`,
+        const newProvider: TypeDefinition = {
+          id: `api-${crypto.randomUUID()}`,
           label,
           color,
           createdAt: Date.now(),
         };
 
         set((state) => ({
-          customApiProviders: [...state.customApiProviders, newProvider],
+          apiProviders: [...state.apiProviders, newProvider],
         }));
 
         return newProvider;
@@ -126,7 +119,7 @@ export const useVaultStore = create<VaultStore>()(
 
       updateApiProvider: (id, data) => {
         set((state) => ({
-          customApiProviders: state.customApiProviders.map((p) =>
+          apiProviders: state.apiProviders.map((p) =>
             p.id === id ? { ...p, ...data } : p
           ),
         }));
@@ -134,21 +127,20 @@ export const useVaultStore = create<VaultStore>()(
 
       deleteApiProvider: (id) => {
         set((state) => ({
-          customApiProviders: state.customApiProviders.filter((p) => p.id !== id),
+          apiProviders: state.apiProviders.filter((p) => p.id !== id),
         }));
       },
 
-      // Export
       exportData: () => {
-        const { accounts, customLoginTypes, customApiProviders } = get();
+        const { accounts, loginTypes, apiProviders } = get();
 
         const data: ExportData = {
           version: 1,
           source: "vault-key",
           exportedAt: Date.now(),
           accounts,
-          customLoginTypes,
-          customApiProviders,
+          loginTypes,
+          apiProviders,
         };
 
         const json = JSON.stringify(data, null, 2);
@@ -166,7 +158,6 @@ export const useVaultStore = create<VaultStore>()(
         URL.revokeObjectURL(url);
       },
 
-      // Import
       importData: async (file) => {
         try {
           const content = await readFileAsText(file);
@@ -176,42 +167,39 @@ export const useVaultStore = create<VaultStore>()(
             return { success: false, added: 0, updated: 0, error: "Invalid file format" };
           }
 
-          const { accounts, customLoginTypes, customApiProviders } = get();
+          const { accounts, loginTypes, apiProviders } = get();
 
-          // Merge accounts
           const {
             accounts: mergedAccounts,
             added: accountsAdded,
             updated: accountsUpdated,
           } = mergeAccounts(accounts, data.accounts);
 
-          // Merge custom types
           let totalAdded = accountsAdded;
           let totalUpdated = accountsUpdated;
 
-          const importedLoginTypes = data.customLoginTypes ?? [];
-          const importedApiProviders = data.customApiProviders ?? [];
+          const importedLoginTypes = data.loginTypes ?? [];
+          const importedApiProviders = data.apiProviders ?? [];
 
           const {
             types: mergedLoginTypes,
             added: loginAdded,
             updated: loginUpdated,
-          } = mergeCustomTypes(customLoginTypes, importedLoginTypes);
+          } = mergeTypes(loginTypes, importedLoginTypes);
 
           const {
             types: mergedApiProviders,
             added: apiAdded,
             updated: apiUpdated,
-          } = mergeCustomTypes(customApiProviders, importedApiProviders);
+          } = mergeTypes(apiProviders, importedApiProviders);
 
           totalAdded += loginAdded + apiAdded;
           totalUpdated += loginUpdated + apiUpdated;
 
-          // Update state
           set({
             accounts: mergedAccounts,
-            customLoginTypes: mergedLoginTypes,
-            customApiProviders: mergedApiProviders,
+            loginTypes: mergedLoginTypes,
+            apiProviders: mergedApiProviders,
           });
 
           return { success: true, added: totalAdded, updated: totalUpdated };
@@ -222,7 +210,6 @@ export const useVaultStore = create<VaultStore>()(
     }),
     {
       name: "vault-key-data",
-      version: 1,
     }
   )
 );

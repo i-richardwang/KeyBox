@@ -11,7 +11,7 @@ import { AccountDialog } from "@/components/vault/account-dialog";
 import { EmptyState } from "@/components/vault/empty-state";
 import type { AccountFormData } from "@/components/vault/account-form";
 import type { EmailAccount, ApiKeyAccount } from "@/lib/types/account";
-import { isApiKeyAccount, isPresetLoginType } from "@/lib/types/account";
+import { isApiKeyAccount, isEmailAccount } from "@/lib/types/account";
 import type { ImportResult } from "@/lib/import-export";
 
 type FilterTab = "logins" | "api-keys";
@@ -19,7 +19,6 @@ type FilterTab = "logins" | "api-keys";
 export function VaultApp() {
   const {
     accounts,
-    customLoginTypes,
     addAccount,
     updateAccount,
     deleteAccount,
@@ -29,12 +28,10 @@ export function VaultApp() {
 
   const [addDialogOpen, setAddDialogOpen] = useState(false);
 
-  const loginAccounts = useMemo(() => {
-    return accounts.filter((account) => {
-      if (isApiKeyAccount(account)) return false;
-      return isPresetLoginType(account.type) || customLoginTypes.some((ct) => ct.id === account.type);
-    }) as EmailAccount[];
-  }, [accounts, customLoginTypes]);
+  const loginAccounts = useMemo(
+    () => accounts.filter(isEmailAccount) as EmailAccount[],
+    [accounts]
+  );
 
   const apiKeyAccounts = useMemo(
     () => accounts.filter(isApiKeyAccount) as ApiKeyAccount[],

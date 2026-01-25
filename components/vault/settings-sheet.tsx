@@ -21,37 +21,34 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useVaultStore } from "@/lib/store";
 import { TypeBadge } from "./type-badge";
-import type { CustomType } from "@/lib/types/account";
-import { PRESET_LOGIN_TYPES, PRESET_API_PROVIDERS, isEmailAccount, isApiKeyAccount } from "@/lib/types/account";
+import type { TypeDefinition } from "@/lib/types/account";
+import { isEmailAccount, isApiKeyAccount } from "@/lib/types/account";
 import { TypeDialog } from "./type-dialog";
 import { DeleteDialog } from "./delete-dialog";
 
 interface TypeItemProps {
-  type: string;
-  isPreset: boolean;
-  onEdit?: () => void;
-  onDelete?: () => void;
+  type: TypeDefinition;
+  onEdit: () => void;
+  onDelete: () => void;
 }
 
-function TypeItem({ type, isPreset, onEdit, onDelete }: TypeItemProps) {
+function TypeItem({ type, onEdit, onDelete }: TypeItemProps) {
   return (
     <div className="flex items-center justify-between py-2">
-      <TypeBadge type={type} />
-      {!isPreset && (
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon-xs" onClick={onEdit}>
-            <HugeiconsIcon icon={PencilEdit01Icon} strokeWidth={2} />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={onDelete}
-            className="text-destructive hover:text-destructive"
-          >
-            <HugeiconsIcon icon={Delete01Icon} strokeWidth={2} />
-          </Button>
-        </div>
-      )}
+      <TypeBadge type={type.id} />
+      <div className="flex items-center gap-1">
+        <Button variant="ghost" size="icon-xs" onClick={onEdit}>
+          <HugeiconsIcon icon={PencilEdit01Icon} strokeWidth={2} />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          onClick={onDelete}
+          className="text-destructive hover:text-destructive"
+        >
+          <HugeiconsIcon icon={Delete01Icon} strokeWidth={2} />
+        </Button>
+      </div>
     </div>
   );
 }
@@ -59,8 +56,8 @@ function TypeItem({ type, isPreset, onEdit, onDelete }: TypeItemProps) {
 export function SettingsSheet() {
   const {
     accounts,
-    customLoginTypes,
-    customApiProviders,
+    loginTypes,
+    apiProviders,
     addLoginType,
     updateLoginType,
     deleteLoginType,
@@ -71,10 +68,10 @@ export function SettingsSheet() {
 
   const [addLoginDialogOpen, setAddLoginDialogOpen] = useState(false);
   const [addApiDialogOpen, setAddApiDialogOpen] = useState(false);
-  const [editingLoginType, setEditingLoginType] = useState<CustomType | null>(null);
-  const [editingApiProvider, setEditingApiProvider] = useState<CustomType | null>(null);
-  const [deletingLoginType, setDeletingLoginType] = useState<CustomType | null>(null);
-  const [deletingApiProvider, setDeletingApiProvider] = useState<CustomType | null>(null);
+  const [editingLoginType, setEditingLoginType] = useState<TypeDefinition | null>(null);
+  const [editingApiProvider, setEditingApiProvider] = useState<TypeDefinition | null>(null);
+  const [deletingLoginType, setDeletingLoginType] = useState<TypeDefinition | null>(null);
+  const [deletingApiProvider, setDeletingApiProvider] = useState<TypeDefinition | null>(null);
 
   const getLoginTypeUsageCount = (typeId: string): number => {
     return accounts.filter((acc) => isEmailAccount(acc) && acc.type === typeId).length;
@@ -84,7 +81,7 @@ export function SettingsSheet() {
     return accounts.filter((acc) => isApiKeyAccount(acc) && acc.provider === providerId).length;
   };
 
-  const handleDeleteLoginType = (type: CustomType) => {
+  const handleDeleteLoginType = (type: TypeDefinition) => {
     const usageCount = getLoginTypeUsageCount(type.id);
     if (usageCount > 0) {
       toast.error("Cannot delete", {
@@ -95,7 +92,7 @@ export function SettingsSheet() {
     setDeletingLoginType(type);
   };
 
-  const handleDeleteApiProvider = (provider: CustomType) => {
+  const handleDeleteApiProvider = (provider: TypeDefinition) => {
     const usageCount = getApiProviderUsageCount(provider.id);
     if (usageCount > 0) {
       toast.error("Cannot delete", {
@@ -119,7 +116,7 @@ export function SettingsSheet() {
           <SheetHeader>
             <SheetTitle>Settings</SheetTitle>
             <SheetDescription>
-              Manage custom login types and API providers
+              Manage login types and API providers
             </SheetDescription>
           </SheetHeader>
 
@@ -138,15 +135,10 @@ export function SettingsSheet() {
               </div>
 
               <div className="space-y-1">
-                {PRESET_LOGIN_TYPES.map((type) => (
-                  <TypeItem key={type} type={type} isPreset />
-                ))}
-
-                {customLoginTypes.map((type) => (
+                {loginTypes.map((type) => (
                   <TypeItem
                     key={type.id}
-                    type={type.id}
-                    isPreset={false}
+                    type={type}
                     onEdit={() => setEditingLoginType(type)}
                     onDelete={() => handleDeleteLoginType(type)}
                   />
@@ -170,15 +162,10 @@ export function SettingsSheet() {
               </div>
 
               <div className="space-y-1">
-                {PRESET_API_PROVIDERS.map((provider) => (
-                  <TypeItem key={provider} type={provider} isPreset />
-                ))}
-
-                {customApiProviders.map((provider) => (
+                {apiProviders.map((provider) => (
                   <TypeItem
                     key={provider.id}
-                    type={provider.id}
-                    isPreset={false}
+                    type={provider}
                     onEdit={() => setEditingApiProvider(provider)}
                     onDelete={() => handleDeleteApiProvider(provider)}
                   />

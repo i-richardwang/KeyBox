@@ -2,15 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { useVaultStore } from "@/lib/store";
-import type { PresetLoginType, PresetApiProvider, ColorName } from "@/lib/types/account";
-import {
-  LOGIN_TYPE_LABELS,
-  API_PROVIDER_LABELS,
-  LOGIN_TYPE_COLORS,
-  API_PROVIDER_COLORS,
-  isPresetLoginType,
-  isPresetApiProvider,
-} from "@/lib/types/account";
+import type { ColorName } from "@/lib/types/account";
 
 interface TypeInfo {
   label: string;
@@ -18,38 +10,27 @@ interface TypeInfo {
 }
 
 function useTypeInfo(type: string): TypeInfo {
-  const { customLoginTypes, customApiProviders } = useVaultStore();
+  const { loginTypes, apiProviders } = useVaultStore();
 
-  if (isPresetLoginType(type)) {
+  // Check login types
+  const loginType = loginTypes.find((t) => t.id === type);
+  if (loginType) {
     return {
-      label: LOGIN_TYPE_LABELS[type as PresetLoginType],
-      color: LOGIN_TYPE_COLORS[type as PresetLoginType],
+      label: loginType.label,
+      color: loginType.color as ColorName,
     };
   }
 
-  if (isPresetApiProvider(type)) {
+  // Check API providers
+  const apiProvider = apiProviders.find((p) => p.id === type);
+  if (apiProvider) {
     return {
-      label: API_PROVIDER_LABELS[type as PresetApiProvider],
-      color: API_PROVIDER_COLORS[type as PresetApiProvider],
+      label: apiProvider.label,
+      color: apiProvider.color as ColorName,
     };
   }
 
-  const customLogin = customLoginTypes.find((ct) => ct.id === type);
-  if (customLogin) {
-    return {
-      label: customLogin.label,
-      color: customLogin.color as ColorName,
-    };
-  }
-
-  const customApi = customApiProviders.find((cp) => cp.id === type);
-  if (customApi) {
-    return {
-      label: customApi.label,
-      color: customApi.color as ColorName,
-    };
-  }
-
+  // Fallback for unknown types
   return { label: type, color: "slate" };
 }
 

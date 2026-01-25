@@ -1,4 +1,4 @@
-import type { Account, CustomType } from "@/lib/types/account";
+import type { Account, TypeDefinition } from "@/lib/types/account";
 import { isEmailAccount } from "@/lib/types/account";
 
 export interface ExportData {
@@ -6,8 +6,8 @@ export interface ExportData {
   source: "vault-key";
   exportedAt: number;
   accounts: Account[];
-  customLoginTypes?: CustomType[];
-  customApiProviders?: CustomType[];
+  loginTypes?: TypeDefinition[];
+  apiProviders?: TypeDefinition[];
 }
 
 export interface ImportResult {
@@ -47,9 +47,8 @@ function validateImportData(data: unknown): data is ExportData {
     }
   }
 
-  // Optional arrays - validate if present
-  if (obj.customLoginTypes !== undefined && !Array.isArray(obj.customLoginTypes)) return false;
-  if (obj.customApiProviders !== undefined && !Array.isArray(obj.customApiProviders)) return false;
+  if (obj.loginTypes !== undefined && !Array.isArray(obj.loginTypes)) return false;
+  if (obj.apiProviders !== undefined && !Array.isArray(obj.apiProviders)) return false;
 
   return true;
 }
@@ -110,7 +109,7 @@ export function mergeAccounts(
   };
 }
 
-export function mergeCustomTypes<T extends { id: string; label: string }>(
+export function mergeTypes<T extends { id: string; label: string }>(
   existing: T[],
   imported: T[]
 ): { types: T[]; added: number; updated: number } {

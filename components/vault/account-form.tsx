@@ -15,16 +15,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useVaultStore } from "@/lib/store";
-import type { Account, PresetLoginType, PresetApiProvider } from "@/lib/types/account";
-import {
-  PRESET_LOGIN_TYPES,
-  PRESET_API_PROVIDERS,
-  LOGIN_TYPE_LABELS,
-  API_PROVIDER_LABELS,
-  LOGIN_TYPE_COLORS,
-  API_PROVIDER_COLORS,
-  isEmailAccount,
-} from "@/lib/types/account";
+import type { Account } from "@/lib/types/account";
+import { isEmailAccount } from "@/lib/types/account";
 import { TypeSelector } from "./type-selector";
 
 type AccountCategory = "login" | "api-key";
@@ -82,7 +74,7 @@ function getInitialValues(initialData?: Account) {
 }
 
 export function AccountForm({ initialData, onSubmit, onCancel }: AccountFormProps) {
-  const { customLoginTypes, customApiProviders, addLoginType, addApiProvider } = useVaultStore();
+  const { loginTypes, apiProviders, addLoginType, addApiProvider } = useVaultStore();
 
   const initial = getInitialValues(initialData);
 
@@ -93,18 +85,6 @@ export function AccountForm({ initialData, onSubmit, onCancel }: AccountFormProp
   const [password, setPassword] = useState(initial.password);
   const [totpSecret, setTotpSecret] = useState(initial.totpSecret);
   const [apiKey, setApiKey] = useState(initial.apiKey);
-
-  const loginTypePresets = PRESET_LOGIN_TYPES.map((type) => ({
-    value: type,
-    label: LOGIN_TYPE_LABELS[type as PresetLoginType],
-    color: LOGIN_TYPE_COLORS[type as PresetLoginType],
-  }));
-
-  const apiProviderPresets = PRESET_API_PROVIDERS.map((p) => ({
-    value: p,
-    label: API_PROVIDER_LABELS[p as PresetApiProvider],
-    color: API_PROVIDER_COLORS[p as PresetApiProvider],
-  }));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,9 +121,8 @@ export function AccountForm({ initialData, onSubmit, onCancel }: AccountFormProp
             <TypeSelector
               value={loginType}
               onChange={setLoginType}
-              presets={loginTypePresets}
-              customTypes={customLoginTypes}
-              onAddCustomType={addLoginType}
+              types={loginTypes}
+              onAddType={addLoginType}
               placeholder="Select type..."
               disabled={!!initialData}
               addDialogTitle="Add Login Type"
@@ -195,9 +174,8 @@ export function AccountForm({ initialData, onSubmit, onCancel }: AccountFormProp
             <TypeSelector
               value={provider}
               onChange={setProvider}
-              presets={apiProviderPresets}
-              customTypes={customApiProviders}
-              onAddCustomType={addApiProvider}
+              types={apiProviders}
+              onAddType={addApiProvider}
               placeholder="Select provider..."
               disabled={!!initialData}
               addDialogTitle="Add API Provider"
