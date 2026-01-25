@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo } from "react";
 import { toast } from "sonner";
-import { useAccounts } from "@/hooks/use-accounts";
-import { CustomTypesProvider, useCustomTypes } from "@/context/custom-types-context";
+import { useVaultStore } from "@/lib/store";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { VaultHeader } from "@/components/vault/vault-header";
 import { LoginTable } from "@/components/vault/login-table";
@@ -17,19 +16,25 @@ import type { ImportResult } from "@/lib/import-export";
 
 type FilterTab = "logins" | "api-keys";
 
-function VaultContent() {
-  const { accounts, addAccount, updateAccount, deleteAccount, exportAccounts, importAccounts } = useAccounts();
-  const { loginTypes, apiProviders, importCustomTypes } = useCustomTypes();
+export function VaultApp() {
+  const {
+    accounts,
+    customLoginTypes,
+    addAccount,
+    updateAccount,
+    deleteAccount,
+    exportData,
+    importData,
+  } = useVaultStore();
 
   const [addDialogOpen, setAddDialogOpen] = useState(false);
 
-  // Filter accounts by type
   const loginAccounts = useMemo(() => {
     return accounts.filter((account) => {
       if (isApiKeyAccount(account)) return false;
-      return isPresetLoginType(account.type) || loginTypes.some((ct) => ct.id === account.type);
+      return isPresetLoginType(account.type) || customLoginTypes.some((ct) => ct.id === account.type);
     }) as EmailAccount[];
-  }, [accounts, loginTypes]);
+  }, [accounts, customLoginTypes]);
 
   const apiKeyAccounts = useMemo(
     () => accounts.filter(isApiKeyAccount) as ApiKeyAccount[],
@@ -56,18 +61,6 @@ function VaultContent() {
     }
   };
 
-  const handleExport = useCallback(() => {
-    exportAccounts(loginTypes, apiProviders);
-  }, [exportAccounts, loginTypes, apiProviders]);
-
-  const handleImport = useCallback(async (file: File) => {
-    return importAccounts(file, {
-      customLoginTypes: loginTypes,
-      customApiProviders: apiProviders,
-      onImportCustomTypes: importCustomTypes,
-    });
-  }, [importAccounts, loginTypes, apiProviders, importCustomTypes]);
-
   const handleImportComplete = (result: ImportResult) => {
     if (result.success) {
       if (result.added === 0 && result.updated === 0) {
@@ -88,8 +81,8 @@ function VaultContent() {
       <div className="container mx-auto px-4 py-8 max-w-5xl">
         <VaultHeader
           onAddClick={() => setAddDialogOpen(true)}
-          onExport={handleExport}
-          onImport={handleImport}
+          onExport={exportData}
+          onImport={importData}
           onImportComplete={handleImportComplete}
         />
 
@@ -141,13 +134,5 @@ function VaultContent() {
         />
       </div>
     </div>
-  );
-}
-
-export function VaultApp() {
-  return (
-    <CustomTypesProvider>
-      <VaultContent />
-    </CustomTypesProvider>
   );
 }

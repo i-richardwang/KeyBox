@@ -21,13 +21,12 @@ import { ArrowDown01Icon, Add01Icon } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
 import { getBadgeClass } from "@/lib/colors";
 import type { CustomType } from "@/lib/types/account";
-import { AddTypeDialog } from "./add-type-dialog";
+import { TypeDialog } from "./type-dialog";
 
 interface TypeOption {
   value: string;
   label: string;
   color: string;
-  isPreset: boolean;
 }
 
 interface TypeSelectorProps {
@@ -43,16 +42,11 @@ interface TypeSelectorProps {
 }
 
 function ColorDot({ color }: { color: string }) {
-  // Extract just the background color from badge classes
   const badgeClass = getBadgeClass(color);
   const bgClass = badgeClass.split(" ")[0];
   return <span className={cn("w-3 h-3 rounded-full", bgClass)} />;
 }
 
-/**
- * A combobox-style selector for login types or API providers
- * with support for adding new custom types
- */
 export function TypeSelector({
   value,
   onChange,
@@ -74,11 +68,9 @@ export function TypeSelector({
       value: ct.id,
       label: ct.label,
       color: ct.color,
-      isPreset: false,
     })),
   ];
 
-  // Find selected option
   const selectedOption = allOptions.find((opt) => opt.value === value);
 
   const handleAddCustomType = (label: string, color: string) => {
@@ -118,7 +110,6 @@ export function TypeSelector({
             <CommandList>
               <CommandEmpty>No results found.</CommandEmpty>
 
-              {/* Presets group */}
               <CommandGroup heading="Presets">
                 {presets.map((option) => (
                   <CommandItem
@@ -136,7 +127,6 @@ export function TypeSelector({
                 ))}
               </CommandGroup>
 
-              {/* Custom types group (if any) */}
               {customTypes.length > 0 && (
                 <>
                   <CommandSeparator />
@@ -159,7 +149,6 @@ export function TypeSelector({
                 </>
               )}
 
-              {/* Add new option */}
               <CommandSeparator />
               <CommandGroup>
                 <CommandItem
@@ -178,10 +167,10 @@ export function TypeSelector({
         </PopoverContent>
       </Popover>
 
-      <AddTypeDialog
+      <TypeDialog
         open={addDialogOpen}
         onOpenChange={setAddDialogOpen}
-        onAdd={handleAddCustomType}
+        onSubmit={handleAddCustomType}
         title={addDialogTitle}
         placeholder={addDialogPlaceholder}
       />

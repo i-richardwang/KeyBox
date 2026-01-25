@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { getBadgeClass } from "@/lib/colors";
-import { useCustomTypes } from "@/context/custom-types-context";
+import { useVaultStore } from "@/lib/store";
 import type { PresetLoginType, PresetApiProvider } from "@/lib/types/account";
 import {
   LOGIN_TYPE_LABELS,
@@ -17,12 +17,8 @@ interface TypeBadgeProps {
   type: string;
 }
 
-/**
- * Displays a badge indicating the login type or API provider
- * Supports both preset types and custom types with dynamic colors
- */
 export function TypeBadge({ type }: TypeBadgeProps) {
-  const { loginTypes, apiProviders } = useCustomTypes();
+  const { customLoginTypes, customApiProviders } = useVaultStore();
 
   let label: string;
   let color: string;
@@ -34,12 +30,12 @@ export function TypeBadge({ type }: TypeBadgeProps) {
     label = API_PROVIDER_LABELS[type as PresetApiProvider];
     color = API_PROVIDER_COLORS[type as PresetApiProvider];
   } else {
-    const customLogin = loginTypes.find((ct) => ct.id === type);
+    const customLogin = customLoginTypes.find((ct) => ct.id === type);
     if (customLogin) {
       label = customLogin.label;
       color = customLogin.color;
     } else {
-      const customApi = apiProviders.find((cp) => cp.id === type);
+      const customApi = customApiProviders.find((cp) => cp.id === type);
       if (customApi) {
         label = customApi.label;
         color = customApi.color;

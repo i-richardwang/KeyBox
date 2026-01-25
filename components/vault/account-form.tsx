@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useCustomTypes } from "@/context/custom-types-context";
+import { useVaultStore } from "@/lib/store";
 import type { Account, PresetLoginType, PresetApiProvider } from "@/lib/types/account";
 import {
   PRESET_LOGIN_TYPES,
@@ -41,21 +41,6 @@ interface AccountFormProps {
   onSubmit: (data: AccountFormData) => void;
   onCancel: () => void;
 }
-
-// Build preset options for TypeSelector
-const loginTypePresets = PRESET_LOGIN_TYPES.map((type) => ({
-  value: type,
-  label: LOGIN_TYPE_LABELS[type as PresetLoginType],
-  color: LOGIN_TYPE_COLORS[type as PresetLoginType],
-  isPreset: true,
-}));
-
-const apiProviderPresets = PRESET_API_PROVIDERS.map((provider) => ({
-  value: provider,
-  label: API_PROVIDER_LABELS[provider as PresetApiProvider],
-  color: API_PROVIDER_COLORS[provider as PresetApiProvider],
-  isPreset: true,
-}));
 
 function getInitialValues(initialData?: Account) {
   if (!initialData) {
@@ -94,7 +79,7 @@ function getInitialValues(initialData?: Account) {
 }
 
 export function AccountForm({ initialData, onSubmit, onCancel }: AccountFormProps) {
-  const { loginTypes, apiProviders, addLoginType, addApiProvider } = useCustomTypes();
+  const { customLoginTypes, customApiProviders, addLoginType, addApiProvider } = useVaultStore();
 
   const initial = getInitialValues(initialData);
 
@@ -105,6 +90,19 @@ export function AccountForm({ initialData, onSubmit, onCancel }: AccountFormProp
   const [password, setPassword] = useState(initial.password);
   const [totpSecret, setTotpSecret] = useState(initial.totpSecret);
   const [apiKey, setApiKey] = useState(initial.apiKey);
+
+  // Build preset options for TypeSelector
+  const loginTypePresets = PRESET_LOGIN_TYPES.map((type) => ({
+    value: type,
+    label: LOGIN_TYPE_LABELS[type as PresetLoginType],
+    color: LOGIN_TYPE_COLORS[type as PresetLoginType],
+  }));
+
+  const apiProviderPresets = PRESET_API_PROVIDERS.map((p) => ({
+    value: p,
+    label: API_PROVIDER_LABELS[p as PresetApiProvider],
+    color: API_PROVIDER_COLORS[p as PresetApiProvider],
+  }));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,7 +140,7 @@ export function AccountForm({ initialData, onSubmit, onCancel }: AccountFormProp
               value={loginType}
               onChange={setLoginType}
               presets={loginTypePresets}
-              customTypes={loginTypes}
+              customTypes={customLoginTypes}
               onAddCustomType={addLoginType}
               placeholder="Select type..."
               disabled={!!initialData}
@@ -194,7 +192,7 @@ export function AccountForm({ initialData, onSubmit, onCancel }: AccountFormProp
               value={provider}
               onChange={setProvider}
               presets={apiProviderPresets}
-              customTypes={apiProviders}
+              customTypes={customApiProviders}
               onAddCustomType={addApiProvider}
               placeholder="Select provider..."
               disabled={!!initialData}

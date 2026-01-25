@@ -46,12 +46,8 @@ export interface CustomType {
   createdAt: number;
 }
 
-// Alias types for semantic clarity
 export type CustomLoginType = CustomType;
 export type CustomApiProvider = CustomType;
-
-// Account type for top-level distinction
-export type AccountType = LoginType | "api-key";
 
 // Base fields shared by all accounts
 interface BaseAccount {
@@ -78,7 +74,7 @@ export interface ApiKeyAccount extends BaseAccount {
 // Union type for all account types
 export type Account = EmailAccount | ApiKeyAccount;
 
-// Input types for creating new accounts (without auto-generated fields)
+// Input types for creating new accounts
 export type NewEmailAccount = Omit<EmailAccount, "id" | "createdAt" | "updatedAt">;
 export type NewApiKeyAccount = Omit<ApiKeyAccount, "id" | "createdAt" | "updatedAt">;
 export type NewAccount = NewEmailAccount | NewApiKeyAccount;
@@ -99,16 +95,6 @@ export function isEmailAccount(account: Account): account is EmailAccount {
 export function isApiKeyAccount(account: Account): account is ApiKeyAccount {
   return account.type === "api-key";
 }
-
-// Storage schema - version 2 with custom types
-export interface VaultStorage {
-  version: 1 | 2;
-  accounts: Account[];
-  customLoginTypes?: CustomLoginType[];
-  customApiProviders?: CustomApiProvider[];
-}
-
-export const STORAGE_KEY = "vault-key-data";
 
 // Color palette for custom types
 export const COLOR_PALETTE = [

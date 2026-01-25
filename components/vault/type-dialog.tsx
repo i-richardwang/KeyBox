@@ -13,29 +13,25 @@ import { Label } from "@/components/ui/label";
 import { ColorPicker } from "./color-picker";
 import type { ColorName } from "@/lib/types/account";
 
-interface EditTypeDialogProps {
+interface TypeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (label: string, color: string) => void;
+  onSubmit: (label: string, color: string) => void;
   title: string;
-  initialLabel: string;
-  initialColor: string;
+  placeholder?: string;
+  initialLabel?: string;
+  initialColor?: string;
 }
 
-/**
- * Dialog for editing a custom type (login type or API provider)
- * Uses key-based reset pattern to reinitialize form when props change
- */
-export function EditTypeDialog({
+export function TypeDialog({
   open,
   onOpenChange,
-  onSave,
+  onSubmit,
   title,
+  placeholder = "Enter name...",
   initialLabel,
   initialColor,
-}: EditTypeDialogProps) {
-  // Use a key to force re-render when initialLabel changes
-  // This avoids the need for useEffect with setState
+}: TypeDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[360px]">
@@ -43,11 +39,15 @@ export function EditTypeDialog({
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         {open && (
-          <EditTypeForm
-            key={initialLabel}
-            initialLabel={initialLabel}
-            initialColor={initialColor}
-            onSave={onSave}
+          <TypeForm
+            key={initialLabel ?? "new"}
+            initialLabel={initialLabel ?? ""}
+            initialColor={initialColor ?? "blue"}
+            placeholder={placeholder}
+            onSubmit={(label, color) => {
+              onSubmit(label, color);
+              onOpenChange(false);
+            }}
             onCancel={() => onOpenChange(false)}
           />
         )}
@@ -56,32 +56,42 @@ export function EditTypeDialog({
   );
 }
 
-interface EditTypeFormProps {
+interface TypeFormProps {
   initialLabel: string;
   initialColor: string;
-  onSave: (label: string, color: string) => void;
+  placeholder: string;
+  onSubmit: (label: string, color: string) => void;
   onCancel: () => void;
 }
 
-function EditTypeForm({ initialLabel, initialColor, onSave, onCancel }: EditTypeFormProps) {
+function TypeForm({
+  initialLabel,
+  initialColor,
+  placeholder,
+  onSubmit,
+  onCancel,
+}: TypeFormProps) {
   const [label, setLabel] = useState(initialLabel);
   const [color, setColor] = useState<ColorName>(initialColor as ColorName);
+
+  const isEdit = initialLabel !== "";
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (label.trim()) {
-      onSave(label.trim(), color);
+      onSubmit(label.trim(), color);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="edit-type-label">Name</Label>
+        <Label htmlFor="type-label">Name</Label>
         <Input
-          id="edit-type-label"
+          id="type-label"
           value={label}
           onChange={(e) => setLabel(e.target.value)}
+          placeholder={placeholder}
           autoFocus
         />
       </div>
@@ -96,7 +106,7 @@ function EditTypeForm({ initialLabel, initialColor, onSave, onCancel }: EditType
           Cancel
         </Button>
         <Button type="submit" disabled={!label.trim()}>
-          Save
+          {isEdit ? "Save" : "Add"}
         </Button>
       </div>
     </form>
