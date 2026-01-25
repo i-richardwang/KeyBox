@@ -1,9 +1,8 @@
 "use client";
 
-import { cn } from "@/lib/utils";
-import { getBadgeClass } from "@/lib/colors";
+import { Badge } from "@/components/ui/badge";
 import { useVaultStore } from "@/lib/store";
-import type { PresetLoginType, PresetApiProvider } from "@/lib/types/account";
+import type { PresetLoginType, PresetApiProvider, ColorName } from "@/lib/types/account";
 import {
   LOGIN_TYPE_LABELS,
   API_PROVIDER_LABELS,
@@ -13,42 +12,54 @@ import {
   isPresetApiProvider,
 } from "@/lib/types/account";
 
+interface TypeInfo {
+  label: string;
+  color: ColorName;
+}
+
+function useTypeInfo(type: string): TypeInfo {
+  const { customLoginTypes, customApiProviders } = useVaultStore();
+
+  if (isPresetLoginType(type)) {
+    return {
+      label: LOGIN_TYPE_LABELS[type as PresetLoginType],
+      color: LOGIN_TYPE_COLORS[type as PresetLoginType],
+    };
+  }
+
+  if (isPresetApiProvider(type)) {
+    return {
+      label: API_PROVIDER_LABELS[type as PresetApiProvider],
+      color: API_PROVIDER_COLORS[type as PresetApiProvider],
+    };
+  }
+
+  const customLogin = customLoginTypes.find((ct) => ct.id === type);
+  if (customLogin) {
+    return {
+      label: customLogin.label,
+      color: customLogin.color as ColorName,
+    };
+  }
+
+  const customApi = customApiProviders.find((cp) => cp.id === type);
+  if (customApi) {
+    return {
+      label: customApi.label,
+      color: customApi.color as ColorName,
+    };
+  }
+
+  return { label: type, color: "slate" };
+}
+
 interface TypeBadgeProps {
   type: string;
 }
 
 export function TypeBadge({ type }: TypeBadgeProps) {
-  const { customLoginTypes, customApiProviders } = useVaultStore();
-
-  let label: string;
-  let color: string;
-
-  if (isPresetLoginType(type)) {
-    label = LOGIN_TYPE_LABELS[type as PresetLoginType];
-    color = LOGIN_TYPE_COLORS[type as PresetLoginType];
-  } else if (isPresetApiProvider(type)) {
-    label = API_PROVIDER_LABELS[type as PresetApiProvider];
-    color = API_PROVIDER_COLORS[type as PresetApiProvider];
-  } else {
-    const customLogin = customLoginTypes.find((ct) => ct.id === type);
-    if (customLogin) {
-      label = customLogin.label;
-      color = customLogin.color;
-    } else {
-      const customApi = customApiProviders.find((cp) => cp.id === type);
-      if (customApi) {
-        label = customApi.label;
-        color = customApi.color;
-      } else {
-        label = type;
-        color = "slate";
-      }
-    }
-  }
-
-  return (
-    <span className={cn("px-2.5 py-0.5 rounded-md text-xs font-medium", getBadgeClass(color))}>
-      {label}
-    </span>
-  );
+  const { label, color } = useTypeInfo(type);
+  return <Badge color={color}>{label}</Badge>;
 }
+
+export { useTypeInfo };

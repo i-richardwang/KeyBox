@@ -3,7 +3,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  Field,
+  FieldLabel,
+} from "@/components/ui/field";
 import {
   Select,
   SelectContent,
@@ -91,7 +94,6 @@ export function AccountForm({ initialData, onSubmit, onCancel }: AccountFormProp
   const [totpSecret, setTotpSecret] = useState(initial.totpSecret);
   const [apiKey, setApiKey] = useState(initial.apiKey);
 
-  // Build preset options for TypeSelector
   const loginTypePresets = PRESET_LOGIN_TYPES.map((type) => ({
     value: type,
     label: LOGIN_TYPE_LABELS[type as PresetLoginType],
@@ -115,8 +117,8 @@ export function AccountForm({ initialData, onSubmit, onCancel }: AccountFormProp
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="category">Category</Label>
+      <Field>
+        <FieldLabel htmlFor="category">Category</FieldLabel>
         <Select
           value={category}
           onValueChange={(value) => setCategory(value as AccountCategory)}
@@ -130,12 +132,12 @@ export function AccountForm({ initialData, onSubmit, onCancel }: AccountFormProp
             <SelectItem value="api-key">API Key</SelectItem>
           </SelectContent>
         </Select>
-      </div>
+      </Field>
 
       {category === "login" ? (
         <>
-          <div className="space-y-2">
-            <Label>Type</Label>
+          <Field>
+            <FieldLabel>Type</FieldLabel>
             <TypeSelector
               value={loginType}
               onChange={setLoginType}
@@ -147,10 +149,10 @@ export function AccountForm({ initialData, onSubmit, onCancel }: AccountFormProp
               addDialogTitle="Add Login Type"
               addDialogPlaceholder="e.g., iCloud, GitHub"
             />
-          </div>
+          </Field>
 
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+          <Field>
+            <FieldLabel htmlFor="email">Email</FieldLabel>
             <Input
               id="email"
               type="email"
@@ -159,9 +161,10 @@ export function AccountForm({ initialData, onSubmit, onCancel }: AccountFormProp
               placeholder="example@gmail.com"
               required
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="password">Password</FieldLabel>
             <Input
               id="password"
               type="text"
@@ -170,11 +173,12 @@ export function AccountForm({ initialData, onSubmit, onCancel }: AccountFormProp
               placeholder="Enter password"
               required
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="totpSecret">
-              2FA Secret <span className="text-muted-foreground">(optional)</span>
-            </Label>
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="totpSecret">
+              2FA Secret <span className="text-muted-foreground font-normal">(optional)</span>
+            </FieldLabel>
             <Input
               id="totpSecret"
               type="text"
@@ -182,12 +186,12 @@ export function AccountForm({ initialData, onSubmit, onCancel }: AccountFormProp
               onChange={(e) => setTotpSecret(e.target.value)}
               placeholder="Base32 encoded secret"
             />
-          </div>
+          </Field>
         </>
       ) : (
         <>
-          <div className="space-y-2">
-            <Label>Provider</Label>
+          <Field>
+            <FieldLabel>Provider</FieldLabel>
             <TypeSelector
               value={provider}
               onChange={setProvider}
@@ -199,10 +203,10 @@ export function AccountForm({ initialData, onSubmit, onCancel }: AccountFormProp
               addDialogTitle="Add API Provider"
               addDialogPlaceholder="e.g., GitHub, Stripe"
             />
-          </div>
+          </Field>
 
-          <div className="space-y-2">
-            <Label htmlFor="apiKey">API Key</Label>
+          <Field>
+            <FieldLabel htmlFor="apiKey">API Key</FieldLabel>
             <Input
               id="apiKey"
               type="text"
@@ -211,7 +215,7 @@ export function AccountForm({ initialData, onSubmit, onCancel }: AccountFormProp
               placeholder="Enter API key"
               required
             />
-          </div>
+          </Field>
         </>
       )}
 

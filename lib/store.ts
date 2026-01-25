@@ -1,11 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type {
-  Account,
-  NewAccount,
-  CustomLoginType,
-  CustomApiProvider,
-} from "@/lib/types/account";
+import type { Account, NewAccount, CustomType } from "@/lib/types/account";
 import {
   parseImportFile,
   mergeAccounts,
@@ -17,8 +12,8 @@ import {
 
 interface VaultState {
   accounts: Account[];
-  customLoginTypes: CustomLoginType[];
-  customApiProviders: CustomApiProvider[];
+  customLoginTypes: CustomType[];
+  customApiProviders: CustomType[];
 }
 
 interface VaultActions {
@@ -28,13 +23,13 @@ interface VaultActions {
   deleteAccount: (id: string) => void;
 
   // Custom login type actions
-  addLoginType: (label: string, color: string) => CustomLoginType;
-  updateLoginType: (id: string, data: Partial<Pick<CustomLoginType, "label" | "color">>) => void;
+  addLoginType: (label: string, color: string) => CustomType;
+  updateLoginType: (id: string, data: Partial<Pick<CustomType, "label" | "color">>) => void;
   deleteLoginType: (id: string) => void;
 
   // Custom API provider actions
-  addApiProvider: (label: string, color: string) => CustomApiProvider;
-  updateApiProvider: (id: string, data: Partial<Pick<CustomApiProvider, "label" | "color">>) => void;
+  addApiProvider: (label: string, color: string) => CustomType;
+  updateApiProvider: (id: string, data: Partial<Pick<CustomType, "label" | "color">>) => void;
   deleteApiProvider: (id: string) => void;
 
   // Import/Export
@@ -85,7 +80,7 @@ export const useVaultStore = create<VaultStore>()(
 
       // Custom login type actions
       addLoginType: (label, color) => {
-        const newType: CustomLoginType = {
+        const newType: CustomType = {
           id: `custom-login-${crypto.randomUUID()}`,
           label,
           color,
@@ -115,7 +110,7 @@ export const useVaultStore = create<VaultStore>()(
 
       // Custom API provider actions
       addApiProvider: (label, color) => {
-        const newProvider: CustomApiProvider = {
+        const newProvider: CustomType = {
           id: `custom-api-${crypto.randomUUID()}`,
           label,
           color,
@@ -194,9 +189,8 @@ export const useVaultStore = create<VaultStore>()(
           let totalAdded = accountsAdded;
           let totalUpdated = accountsUpdated;
 
-          const exportData = data as ExportData;
-          const importedLoginTypes = exportData.customLoginTypes || [];
-          const importedApiProviders = exportData.customApiProviders || [];
+          const importedLoginTypes = data.customLoginTypes ?? [];
+          const importedApiProviders = data.customApiProviders ?? [];
 
           const {
             types: mergedLoginTypes,

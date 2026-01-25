@@ -18,10 +18,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { MoreVerticalIcon, PencilEdit01Icon, Delete01Icon } from "@hugeicons/core-free-icons";
-import { useVaultStore } from "@/lib/store";
 import type { ApiKeyAccount } from "@/lib/types/account";
-import { API_PROVIDER_LABELS, isPresetApiProvider } from "@/lib/types/account";
-import { TypeBadge } from "./type-badge";
+import { TypeBadge, useTypeInfo } from "./type-badge";
 import { SecretCell } from "./secret-cell";
 import { AccountDialog } from "./account-dialog";
 import { DeleteDialog } from "./delete-dialog";
@@ -34,9 +32,11 @@ interface ApiKeyTableProps {
 }
 
 export function ApiKeyTable({ accounts, onUpdate, onDelete }: ApiKeyTableProps) {
-  const { customApiProviders } = useVaultStore();
   const [editingAccount, setEditingAccount] = useState<ApiKeyAccount | null>(null);
   const [deletingAccount, setDeletingAccount] = useState<ApiKeyAccount | null>(null);
+
+  // Get label for the deleting account (hook must be called unconditionally)
+  const deletingProviderInfo = useTypeInfo(deletingAccount?.provider ?? "");
 
   const handleEditSubmit = (data: AccountFormData) => {
     if (!editingAccount) return;
@@ -51,14 +51,6 @@ export function ApiKeyTable({ accounts, onUpdate, onDelete }: ApiKeyTableProps) 
       onDelete(deletingAccount.id);
       setDeletingAccount(null);
     }
-  };
-
-  const getProviderLabel = (provider: string): string => {
-    if (isPresetApiProvider(provider)) {
-      return API_PROVIDER_LABELS[provider];
-    }
-    const custom = customApiProviders.find((p) => p.id === provider);
-    return custom?.label ?? provider;
   };
 
   return (
@@ -123,7 +115,7 @@ export function ApiKeyTable({ accounts, onUpdate, onDelete }: ApiKeyTableProps) 
         open={!!deletingAccount}
         onOpenChange={(open) => !open && setDeletingAccount(null)}
         onConfirm={handleDeleteConfirm}
-        accountName={deletingAccount ? getProviderLabel(deletingAccount.provider) : ""}
+        accountName={deletingAccount ? deletingProviderInfo.label : ""}
       />
     </>
   );

@@ -6,9 +6,16 @@ export type PresetLoginType = (typeof PRESET_LOGIN_TYPES)[number];
 export const PRESET_API_PROVIDERS = ["ollama", "openai", "anthropic", "cerebras", "tavily"] as const;
 export type PresetApiProvider = (typeof PRESET_API_PROVIDERS)[number];
 
-// Runtime types are strings to support custom values
-export type LoginType = string;
-export type ApiProvider = string;
+// Color palette for custom types
+export const COLOR_PALETTE = [
+  "red", "orange", "amber", "yellow",
+  "lime", "green", "emerald", "teal",
+  "cyan", "sky", "blue", "indigo",
+  "violet", "purple", "fuchsia", "pink",
+  "rose", "slate",
+] as const;
+
+export type ColorName = (typeof COLOR_PALETTE)[number];
 
 // Display labels for presets
 export const LOGIN_TYPE_LABELS: Record<PresetLoginType, string> = {
@@ -24,13 +31,13 @@ export const API_PROVIDER_LABELS: Record<PresetApiProvider, string> = {
   tavily: "Tavily",
 };
 
-// Default colors for presets
-export const LOGIN_TYPE_COLORS: Record<PresetLoginType, string> = {
+// Colors for presets (must be valid ColorName)
+export const LOGIN_TYPE_COLORS: Record<PresetLoginType, ColorName> = {
   gmail: "red",
   outlook: "blue",
 };
 
-export const API_PROVIDER_COLORS: Record<PresetApiProvider, string> = {
+export const API_PROVIDER_COLORS: Record<PresetApiProvider, ColorName> = {
   ollama: "slate",
   openai: "emerald",
   anthropic: "orange",
@@ -46,9 +53,6 @@ export interface CustomType {
   createdAt: number;
 }
 
-export type CustomLoginType = CustomType;
-export type CustomApiProvider = CustomType;
-
 // Base fields shared by all accounts
 interface BaseAccount {
   id: string;
@@ -58,7 +62,7 @@ interface BaseAccount {
 
 // Email account (Gmail, Outlook, or custom)
 export interface EmailAccount extends BaseAccount {
-  type: LoginType;
+  type: string;
   email: string;
   password: string;
   totpSecret?: string;
@@ -67,7 +71,7 @@ export interface EmailAccount extends BaseAccount {
 // API Key account
 export interface ApiKeyAccount extends BaseAccount {
   type: "api-key";
-  provider: ApiProvider;
+  provider: string;
   apiKey: string;
 }
 
@@ -95,14 +99,3 @@ export function isEmailAccount(account: Account): account is EmailAccount {
 export function isApiKeyAccount(account: Account): account is ApiKeyAccount {
   return account.type === "api-key";
 }
-
-// Color palette for custom types
-export const COLOR_PALETTE = [
-  "red", "orange", "amber", "yellow",
-  "lime", "green", "emerald", "teal",
-  "cyan", "sky", "blue", "indigo",
-  "violet", "purple", "fuchsia", "pink",
-  "rose", "slate",
-] as const;
-
-export type ColorName = (typeof COLOR_PALETTE)[number];

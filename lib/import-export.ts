@@ -1,4 +1,4 @@
-import type { Account, CustomLoginType, CustomApiProvider } from "@/lib/types/account";
+import type { Account, CustomType } from "@/lib/types/account";
 import { isEmailAccount } from "@/lib/types/account";
 
 export interface ExportData {
@@ -6,8 +6,8 @@ export interface ExportData {
   source: "vault-key";
   exportedAt: number;
   accounts: Account[];
-  customLoginTypes: CustomLoginType[];
-  customApiProviders: CustomApiProvider[];
+  customLoginTypes?: CustomType[];
+  customApiProviders?: CustomType[];
 }
 
 export interface ImportResult {
@@ -47,8 +47,9 @@ function validateImportData(data: unknown): data is ExportData {
     }
   }
 
-  if (!Array.isArray(obj.customLoginTypes)) return false;
-  if (!Array.isArray(obj.customApiProviders)) return false;
+  // Optional arrays - validate if present
+  if (obj.customLoginTypes !== undefined && !Array.isArray(obj.customLoginTypes)) return false;
+  if (obj.customApiProviders !== undefined && !Array.isArray(obj.customApiProviders)) return false;
 
   return true;
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import {
   Sheet,
   SheetContent,
@@ -20,8 +21,8 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useVaultStore } from "@/lib/store";
 import { TypeBadge } from "./type-badge";
-import type { CustomLoginType, CustomApiProvider } from "@/lib/types/account";
-import { PRESET_LOGIN_TYPES, PRESET_API_PROVIDERS } from "@/lib/types/account";
+import type { CustomType } from "@/lib/types/account";
+import { PRESET_LOGIN_TYPES, PRESET_API_PROVIDERS, isEmailAccount, isApiKeyAccount } from "@/lib/types/account";
 import { TypeDialog } from "./type-dialog";
 import { DeleteDialog } from "./delete-dialog";
 
@@ -57,6 +58,7 @@ function TypeItem({ type, isPreset, onEdit, onDelete }: TypeItemProps) {
 
 export function SettingsSheet() {
   const {
+    accounts,
     customLoginTypes,
     customApiProviders,
     addLoginType,
@@ -69,10 +71,40 @@ export function SettingsSheet() {
 
   const [addLoginDialogOpen, setAddLoginDialogOpen] = useState(false);
   const [addApiDialogOpen, setAddApiDialogOpen] = useState(false);
-  const [editingLoginType, setEditingLoginType] = useState<CustomLoginType | null>(null);
-  const [editingApiProvider, setEditingApiProvider] = useState<CustomApiProvider | null>(null);
-  const [deletingLoginType, setDeletingLoginType] = useState<CustomLoginType | null>(null);
-  const [deletingApiProvider, setDeletingApiProvider] = useState<CustomApiProvider | null>(null);
+  const [editingLoginType, setEditingLoginType] = useState<CustomType | null>(null);
+  const [editingApiProvider, setEditingApiProvider] = useState<CustomType | null>(null);
+  const [deletingLoginType, setDeletingLoginType] = useState<CustomType | null>(null);
+  const [deletingApiProvider, setDeletingApiProvider] = useState<CustomType | null>(null);
+
+  const getLoginTypeUsageCount = (typeId: string): number => {
+    return accounts.filter((acc) => isEmailAccount(acc) && acc.type === typeId).length;
+  };
+
+  const getApiProviderUsageCount = (providerId: string): number => {
+    return accounts.filter((acc) => isApiKeyAccount(acc) && acc.provider === providerId).length;
+  };
+
+  const handleDeleteLoginType = (type: CustomType) => {
+    const usageCount = getLoginTypeUsageCount(type.id);
+    if (usageCount > 0) {
+      toast.error("Cannot delete", {
+        description: `"${type.label}" is used by ${usageCount} account${usageCount > 1 ? "s" : ""}`,
+      });
+      return;
+    }
+    setDeletingLoginType(type);
+  };
+
+  const handleDeleteApiProvider = (provider: CustomType) => {
+    const usageCount = getApiProviderUsageCount(provider.id);
+    if (usageCount > 0) {
+      toast.error("Cannot delete", {
+        description: `"${provider.label}" is used by ${usageCount} account${usageCount > 1 ? "s" : ""}`,
+      });
+      return;
+    }
+    setDeletingApiProvider(provider);
+  };
 
   return (
     <>
@@ -116,7 +148,7 @@ export function SettingsSheet() {
                     type={type.id}
                     isPreset={false}
                     onEdit={() => setEditingLoginType(type)}
-                    onDelete={() => setDeletingLoginType(type)}
+                    onDelete={() => handleDeleteLoginType(type)}
                   />
                 ))}
               </div>
@@ -148,7 +180,7 @@ export function SettingsSheet() {
                     type={provider.id}
                     isPreset={false}
                     onEdit={() => setEditingApiProvider(provider)}
-                    onDelete={() => setDeletingApiProvider(provider)}
+                    onDelete={() => handleDeleteApiProvider(provider)}
                   />
                 ))}
               </div>

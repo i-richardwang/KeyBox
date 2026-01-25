@@ -12,8 +12,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { COLOR_PALETTE, type ColorName } from "@/lib/types/account";
 import { COLOR_HEX } from "@/lib/colors";
 import { cn } from "@/lib/utils";
@@ -91,8 +91,8 @@ function TypeForm({
   return (
     <form onSubmit={handleSubmit}>
       <div className="grid gap-4">
-        <div className="grid gap-3">
-          <Label htmlFor="type-label">Name</Label>
+        <Field>
+          <FieldLabel htmlFor="type-label">Name</FieldLabel>
           <Input
             id="type-label"
             value={label}
@@ -100,10 +100,10 @@ function TypeForm({
             placeholder={placeholder}
             autoFocus
           />
-        </div>
+        </Field>
 
-        <div className="grid gap-3">
-          <Label>Color</Label>
+        <Field>
+          <FieldLabel>Color</FieldLabel>
           <RadioGroup
             value={color}
             onValueChange={(v) => setColor(v as ColorName)}
@@ -124,7 +124,7 @@ function TypeForm({
               </div>
             ))}
           </RadioGroup>
-        </div>
+        </Field>
       </div>
 
       <DialogFooter className="mt-6">
