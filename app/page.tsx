@@ -13,7 +13,7 @@ import { isEmailAccount, isApiKeyAccount } from "@/lib/types/account";
 type FilterTab = "all" | "email" | "api-key";
 
 export default function Page() {
-  const { accounts, isLoading, addAccount, updateAccount, deleteAccount } = useAccounts();
+  const { accounts, addAccount, updateAccount, deleteAccount } = useAccounts();
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
 
@@ -46,14 +46,6 @@ export default function Page() {
   // Count for tab labels
   const emailCount = accounts.filter(isEmailAccount).length;
   const apiKeyCount = accounts.filter(isApiKeyAccount).length;
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background">

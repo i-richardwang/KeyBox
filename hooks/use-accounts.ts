@@ -4,26 +4,30 @@ import { useState, useEffect, useCallback } from "react";
 import type { Account, NewAccount, VaultStorage } from "@/lib/types/account";
 import { STORAGE_KEY } from "@/lib/types/account";
 
+// Read accounts from localStorage
+function loadAccounts(): Account[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const data: VaultStorage = JSON.parse(stored);
+      return data.accounts || [];
+    }
+  } catch (error) {
+    console.error("Failed to load accounts:", error);
+  }
+  return [];
+}
+
 /**
  * Hook for managing accounts with localStorage persistence
  */
 export function useAccounts() {
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [accounts, setAccounts] = useState<Account[]>(loadAccounts);
 
-  // Load from localStorage on mount
+  // Sync with localStorage on mount (for SSR hydration)
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const data: VaultStorage = JSON.parse(stored);
-        setAccounts(data.accounts || []);
-      }
-    } catch (error) {
-      console.error("Failed to load accounts:", error);
-    } finally {
-      setIsLoading(false);
-    }
+    setAccounts(loadAccounts());
   }, []);
 
   // Persist to localStorage
@@ -79,5 +83,5 @@ export function useAccounts() {
     [persist]
   );
 
-  return { accounts, isLoading, addAccount, updateAccount, deleteAccount };
+  return { accounts, addAccount, updateAccount, deleteAccount };
 }
