@@ -1,5 +1,28 @@
-// Account type discriminator
-export type AccountType = "gmail" | "outlook" | "api-key";
+// Login type discriminator
+export type LoginType = "gmail" | "outlook";
+
+// API provider discriminator
+export type ApiProvider = "ollama" | "openai" | "anthropic" | "cerebras" | "tavily";
+
+// All API providers for iteration
+export const API_PROVIDERS: ApiProvider[] = ["ollama", "openai", "anthropic", "cerebras", "tavily"];
+
+// Display labels
+export const LOGIN_TYPE_LABELS: Record<LoginType, string> = {
+  gmail: "Gmail",
+  outlook: "Outlook",
+};
+
+export const API_PROVIDER_LABELS: Record<ApiProvider, string> = {
+  ollama: "Ollama",
+  openai: "OpenAI",
+  anthropic: "Anthropic",
+  cerebras: "Cerebras",
+  tavily: "Tavily",
+};
+
+// Account type for top-level distinction
+export type AccountType = LoginType | "api-key";
 
 // Base fields shared by all accounts
 interface BaseAccount {
@@ -10,7 +33,7 @@ interface BaseAccount {
 
 // Email account (Gmail or Outlook)
 export interface EmailAccount extends BaseAccount {
-  type: "gmail" | "outlook";
+  type: LoginType;
   email: string;
   password: string;
   totpSecret?: string;
@@ -19,7 +42,7 @@ export interface EmailAccount extends BaseAccount {
 // API Key account
 export interface ApiKeyAccount extends BaseAccount {
   type: "api-key";
-  provider: string;
+  provider: ApiProvider;
   apiKey: string;
   apiSecret?: string;
 }

@@ -6,25 +6,32 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { ViewIcon, ViewOffIcon } from "@hugeicons/core-free-icons";
 import { CopyButton } from "./copy-button";
 
-interface PasswordCellProps {
+interface SecretCellProps {
   value: string;
   label: string;
 }
 
 // Fixed-length mask to prevent length leakage
-const MASK = "••••••••";
+const MASK = "••••••••••••••••";
 
 /**
- * A cell that displays a masked password/secret with reveal toggle and copy button.
- * Uses fixed-length mask to prevent password length disclosure.
+ * A cell for displaying long secrets (API keys, etc.) with reveal toggle and copy.
+ * Designed for longer values - shows truncated preview when revealed.
  */
-export function PasswordCell({ value, label }: PasswordCellProps) {
+export function SecretCell({ value, label }: SecretCellProps) {
   const [revealed, setRevealed] = useState(false);
+
+  // Show first 8 and last 4 characters when revealed, for long keys
+  const displayValue = revealed
+    ? value.length > 20
+      ? `${value.slice(0, 8)}...${value.slice(-4)}`
+      : value
+    : MASK;
 
   return (
     <div className="flex items-center gap-1">
-      <code className="font-mono text-sm w-24 truncate">
-        {revealed ? value : MASK}
+      <code className="font-mono text-xs w-36 truncate" title={revealed ? value : undefined}>
+        {displayValue}
       </code>
       <Button
         variant="ghost"

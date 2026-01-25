@@ -1,5 +1,5 @@
-import type { Account, VaultStorage } from "@/lib/types/account";
-import { isEmailAccount } from "@/lib/types/account";
+import type { Account, VaultStorage, ApiProvider } from "@/lib/types/account";
+import { isEmailAccount, API_PROVIDERS } from "@/lib/types/account";
 
 // Export file format with metadata
 export interface ExportData {
@@ -72,11 +72,13 @@ function validateImportData(data: unknown): data is ExportData | VaultStorage {
     if (!account || typeof account !== "object") return false;
     if (!("type" in account)) return false;
 
-    const type = (account as Record<string, unknown>).type;
-    if (type === "gmail" || type === "outlook") {
-      if (!("email" in account) || !("password" in account)) return false;
-    } else if (type === "api-key") {
-      if (!("provider" in account) || !("apiKey" in account)) return false;
+    const acc = account as Record<string, unknown>;
+    if (acc.type === "gmail" || acc.type === "outlook") {
+      if (!("email" in acc) || !("password" in acc)) return false;
+    } else if (acc.type === "api-key") {
+      if (!("provider" in acc) || !("apiKey" in acc)) return false;
+      // Validate provider is a known ApiProvider
+      if (!API_PROVIDERS.includes(acc.provider as ApiProvider)) return false;
     } else {
       return false;
     }

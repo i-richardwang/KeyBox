@@ -5,28 +5,37 @@ import { toast } from "sonner";
 import { useAccounts } from "@/hooks/use-accounts";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { VaultHeader } from "@/components/vault/vault-header";
-import { AccountTable } from "@/components/vault/account-table";
+import { LoginTable } from "@/components/vault/login-table";
+import { ApiKeyTable } from "@/components/vault/api-key-table";
 import { AccountDialog } from "@/components/vault/account-dialog";
 import { EmptyState } from "@/components/vault/empty-state";
 import type { AccountFormData } from "@/components/vault/account-form";
+import type { EmailAccount, ApiKeyAccount } from "@/lib/types/account";
 import { isEmailAccount, isApiKeyAccount } from "@/lib/types/account";
 import type { ImportResult } from "@/lib/import-export";
 
-type FilterTab = "all" | "email" | "api-key";
+type FilterTab = "logins" | "api-keys";
 
 export function VaultApp() {
   const { accounts, addAccount, updateAccount, deleteAccount, exportAccounts, importAccounts } = useAccounts();
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<FilterTab>("all");
 
-  const filteredAccounts = useMemo(() => {
-    if (activeTab === "email") return accounts.filter(isEmailAccount);
-    if (activeTab === "api-key") return accounts.filter(isApiKeyAccount);
-    return accounts;
-  }, [accounts, activeTab]);
+  const loginAccounts = useMemo(
+    () => accounts.filter(isEmailAccount) as EmailAccount[],
+    [accounts]
+  );
+
+  const apiKeyAccounts = useMemo(
+    () => accounts.filter(isApiKeyAccount) as ApiKeyAccount[],
+    [accounts]
+  );
+
+  // Default to "logins" tab, or "api-keys" if no logins exist
+  const defaultTab: FilterTab = loginAccounts.length > 0 ? "logins" : "api-keys";
+  const [activeTab, setActiveTab] = useState<FilterTab>(defaultTab);
 
   const handleAdd = (data: AccountFormData) => {
-    if (data.type === "api-key") {
+    if (data.category === "api-key") {
       addAccount({
         type: "api-key",
         provider: data.provider!,
@@ -35,7 +44,7 @@ export function VaultApp() {
       });
     } else {
       addAccount({
-        type: data.type as "gmail" | "outlook",
+        type: data.loginType!,
         email: data.email!,
         password: data.password!,
         totpSecret: data.totpSecret,
@@ -74,19 +83,32 @@ export function VaultApp() {
           ) : (
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as FilterTab)}>
               <TabsList>
-                <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="email">Email</TabsTrigger>
-                <TabsTrigger value="api-key">API Keys</TabsTrigger>
+                <TabsTrigger value="logins">Logins</TabsTrigger>
+                <TabsTrigger value="api-keys">API Keys</TabsTrigger>
               </TabsList>
 
-              <TabsContent value={activeTab} className="mt-4">
-                {filteredAccounts.length === 0 ? (
+              <TabsContent value="logins" className="mt-4">
+                {loginAccounts.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    No {activeTab === "email" ? "email accounts" : activeTab === "api-key" ? "API keys" : "accounts"}
+                    No login accounts
                   </div>
                 ) : (
-                  <AccountTable
-                    accounts={filteredAccounts}
+                  <LoginTable
+                    accounts={loginAccounts}
+                    onUpdate={updateAccount}
+                    onDelete={deleteAccount}
+                  />
+                )}
+              </TabsContent>
+
+              <TabsContent value="api-keys" className="mt-4">
+                {apiKeyAccounts.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No API keys
+                  </div>
+                ) : (
+                  <ApiKeyTable
+                    accounts={apiKeyAccounts}
                     onUpdate={updateAccount}
                     onDelete={deleteAccount}
                   />
