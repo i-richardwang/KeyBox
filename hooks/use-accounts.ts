@@ -3,6 +3,13 @@
 import { useState, useCallback } from "react";
 import type { Account, NewAccount, VaultStorage } from "@/lib/types/account";
 import { STORAGE_KEY } from "@/lib/types/account";
+import {
+  exportAccounts as exportAccountsUtil,
+  parseImportFile,
+  mergeAccounts,
+  readFileAsText,
+  type ImportResult,
+} from "@/lib/import-export";
 
 /**
  * Hook for managing accounts with localStorage persistence
@@ -74,5 +81,34 @@ export function useAccounts() {
     [persist]
   );
 
-  return { accounts, addAccount, updateAccount, deleteAccount };
+  // Export accounts to JSON file
+  const exportAccounts = useCallback(() => {
+    exportAccountsUtil(accounts);
+  }, [accounts]);
+
+  // Import accounts from file with smart merge
+  const importAccounts = useCallback(
+    async (file: File): Promise<ImportResult> => {
+      try {
+        const content = await readFileAsText(file);
+        const data = parseImportFile(content);
+
+        if (!data) {
+          return { success: false, added: 0, updated: 0, error: "Invalid file format" };
+        }
+
+        const { accounts: merged, added, updated } = mergeAccounts(accounts, data.accounts);
+
+        setAccounts(merged);
+        persist(merged);
+
+        return { success: true, added, updated };
+      } catch {
+        return { success: false, added: 0, updated: 0, error: "Failed to read file" };
+      }
+    },
+    [accounts, persist]
+  );
+
+  return { accounts, addAccount, updateAccount, deleteAccount, exportAccounts, importAccounts };
 }
