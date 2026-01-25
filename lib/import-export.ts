@@ -2,7 +2,7 @@ import type { Account, CustomLoginType, CustomApiProvider } from "@/lib/types/ac
 import { isEmailAccount } from "@/lib/types/account";
 
 export interface ExportData {
-  version: 2;
+  version: 1;
   source: "vault-key";
   exportedAt: number;
   accounts: Account[];
@@ -29,7 +29,7 @@ function validateImportData(data: unknown): data is ExportData {
 
   const obj = data as Record<string, unknown>;
 
-  if (obj.version !== 1 && obj.version !== 2) return false;
+  if (obj.version !== 1) return false;
   if (!Array.isArray(obj.accounts)) return false;
 
   for (const account of obj.accounts) {
@@ -47,8 +47,8 @@ function validateImportData(data: unknown): data is ExportData {
     }
   }
 
-  if (obj.customLoginTypes && !Array.isArray(obj.customLoginTypes)) return false;
-  if (obj.customApiProviders && !Array.isArray(obj.customApiProviders)) return false;
+  if (!Array.isArray(obj.customLoginTypes)) return false;
+  if (!Array.isArray(obj.customApiProviders)) return false;
 
   return true;
 }
@@ -57,11 +57,7 @@ export function parseImportFile(content: string): ExportData | null {
   try {
     const data = JSON.parse(content);
     if (validateImportData(data)) {
-      return {
-        ...data,
-        customLoginTypes: data.customLoginTypes || [],
-        customApiProviders: data.customApiProviders || [],
-      } as ExportData;
+      return data;
     }
     return null;
   } catch {

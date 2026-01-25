@@ -148,7 +148,7 @@ export const useVaultStore = create<VaultStore>()(
         const { accounts, customLoginTypes, customApiProviders } = get();
 
         const data: ExportData = {
-          version: 2,
+          version: 1,
           source: "vault-key",
           exportedAt: Date.now(),
           accounts,
@@ -228,7 +228,7 @@ export const useVaultStore = create<VaultStore>()(
     }),
     {
       name: "vault-key-data",
-      version: 2,
+      version: 1,
     }
   )
 );
