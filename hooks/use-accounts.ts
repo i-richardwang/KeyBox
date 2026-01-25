@@ -1,34 +1,25 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import type { Account, NewAccount, VaultStorage } from "@/lib/types/account";
 import { STORAGE_KEY } from "@/lib/types/account";
-
-// Read accounts from localStorage
-function loadAccounts(): Account[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const data: VaultStorage = JSON.parse(stored);
-      return data.accounts || [];
-    }
-  } catch (error) {
-    console.error("Failed to load accounts:", error);
-  }
-  return [];
-}
 
 /**
  * Hook for managing accounts with localStorage persistence
  */
 export function useAccounts() {
-  const [accounts, setAccounts] = useState<Account[]>(loadAccounts);
-
-  // Sync with localStorage on mount (for SSR hydration)
-  useEffect(() => {
-    setAccounts(loadAccounts());
-  }, []);
+  const [accounts, setAccounts] = useState<Account[]>(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      try {
+        const data: VaultStorage = JSON.parse(stored);
+        return data.accounts || [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  });
 
   // Persist to localStorage
   const persist = useCallback((updated: Account[]) => {
