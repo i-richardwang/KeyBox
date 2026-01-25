@@ -12,7 +12,7 @@ interface SecretCellProps {
 }
 
 // Fixed-length mask to prevent length leakage
-const MASK = "••••••••••••••••";
+const MASK = "••••••••••••••••••••••••••••••••••••••••";
 
 /**
  * A cell for displaying long secrets (API keys, etc.) with reveal toggle and copy.
@@ -21,16 +21,16 @@ const MASK = "••••••••••••••••";
 export function SecretCell({ value, label }: SecretCellProps) {
   const [revealed, setRevealed] = useState(false);
 
-  // Show first 8 and last 4 characters when revealed, for long keys
+  // Show first 16 and last 8 characters when revealed, for long keys
   const displayValue = revealed
-    ? value.length > 20
-      ? `${value.slice(0, 8)}...${value.slice(-4)}`
+    ? value.length > 32
+      ? `${value.slice(0, 16)}...${value.slice(-8)}`
       : value
     : MASK;
 
   return (
     <div className="flex items-center gap-1">
-      <code className="font-mono text-xs w-36 truncate" title={revealed ? value : undefined}>
+      <code className="font-mono text-xs flex-1 truncate" title={revealed ? value : undefined}>
         {displayValue}
       </code>
       <Button

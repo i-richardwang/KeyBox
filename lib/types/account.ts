@@ -44,7 +44,6 @@ export interface ApiKeyAccount extends BaseAccount {
   type: "api-key";
   provider: ApiProvider;
   apiKey: string;
-  apiSecret?: string;
 }
 
 // Union type for all account types

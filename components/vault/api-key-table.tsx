@@ -33,7 +33,7 @@ interface ApiKeyTableProps {
 }
 
 /**
- * Table for displaying API key accounts with key and optional secret
+ * Table for displaying API key accounts
  */
 export function ApiKeyTable({ accounts, onUpdate, onDelete }: ApiKeyTableProps) {
   const [editingAccount, setEditingAccount] = useState<ApiKeyAccount | null>(null);
@@ -43,7 +43,6 @@ export function ApiKeyTable({ accounts, onUpdate, onDelete }: ApiKeyTableProps) 
     if (!editingAccount) return;
     onUpdate(editingAccount.id, {
       apiKey: data.apiKey,
-      apiSecret: data.apiSecret,
     });
     setEditingAccount(null);
   };
@@ -63,7 +62,6 @@ export function ApiKeyTable({ accounts, onUpdate, onDelete }: ApiKeyTableProps) 
             <TableRow>
               <TableHead className="w-28">Provider</TableHead>
               <TableHead>API Key</TableHead>
-              <TableHead>API Secret</TableHead>
               <TableHead className="w-12"></TableHead>
             </TableRow>
           </TableHeader>
@@ -76,14 +74,6 @@ export function ApiKeyTable({ accounts, onUpdate, onDelete }: ApiKeyTableProps) 
 
                 <TableCell>
                   <SecretCell value={account.apiKey} label="API Key" />
-                </TableCell>
-
-                <TableCell>
-                  {account.apiSecret ? (
-                    <SecretCell value={account.apiSecret} label="API Secret" />
-                  ) : (
-                    <span className="text-muted-foreground text-sm">—</span>
-                  )}
                 </TableCell>
 
                 <TableCell>

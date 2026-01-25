@@ -40,7 +40,6 @@ export function VaultApp() {
         type: "api-key",
         provider: data.provider!,
         apiKey: data.apiKey!,
-        apiSecret: data.apiSecret,
       });
     } else {
       addAccount({

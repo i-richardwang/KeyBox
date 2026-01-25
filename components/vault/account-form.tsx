@@ -26,7 +26,6 @@ export interface AccountFormData {
   password?: string;
   totpSecret?: string;
   apiKey?: string;
-  apiSecret?: string;
 }
 
 interface AccountFormProps {
@@ -52,7 +51,6 @@ export function AccountForm({ initialData, onSubmit, onCancel }: AccountFormProp
   const [password, setPassword] = useState("");
   const [totpSecret, setTotpSecret] = useState("");
   const [apiKey, setApiKey] = useState("");
-  const [apiSecret, setApiSecret] = useState("");
 
   // Initialize form with existing data when editing
   useEffect(() => {
@@ -67,7 +65,6 @@ export function AccountForm({ initialData, onSubmit, onCancel }: AccountFormProp
         setCategory("api-key");
         setProvider(initialData.provider);
         setApiKey(initialData.apiKey);
-        setApiSecret(initialData.apiSecret || "");
       }
     }
   }, [initialData]);
@@ -75,7 +72,7 @@ export function AccountForm({ initialData, onSubmit, onCancel }: AccountFormProp
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (category === "api-key") {
-      onSubmit({ category, provider, apiKey, apiSecret: apiSecret || undefined });
+      onSubmit({ category, provider, apiKey });
     } else {
       onSubmit({ category, loginType, email, password, totpSecret: totpSecret || undefined });
     }
@@ -188,18 +185,6 @@ export function AccountForm({ initialData, onSubmit, onCancel }: AccountFormProp
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="Enter API key"
               required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="apiSecret">
-              API Secret <span className="text-muted-foreground">(optional)</span>
-            </Label>
-            <Input
-              id="apiSecret"
-              type="text"
-              value={apiSecret}
-              onChange={(e) => setApiSecret(e.target.value)}
-              placeholder="Enter API secret"
             />
           </div>
         </>
