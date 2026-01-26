@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { toast } from "sonner";
 import { useVaultStore } from "@/lib/store";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -32,6 +32,7 @@ export function VaultApp() {
     addAccount,
     updateAccount,
     deleteAccount,
+    deleteAccounts,
     exportData,
     importData,
   } = useVaultStore();
@@ -77,6 +78,25 @@ export function VaultApp() {
     const usedIds = new Set(allApiKeyAccounts.map((a) => a.provider));
     return apiProviders.filter((p) => usedIds.has(p.id));
   }, [allApiKeyAccounts, apiProviders]);
+
+  // Reset filter when the selected type/provider no longer exists
+  useEffect(() => {
+    if (loginTypeFilter !== ALL_FILTER) {
+      const stillExists = usedLoginTypes.some((t) => t.id === loginTypeFilter);
+      if (!stillExists) {
+        setLoginTypeFilter(ALL_FILTER);
+      }
+    }
+  }, [usedLoginTypes, loginTypeFilter]);
+
+  useEffect(() => {
+    if (apiProviderFilter !== ALL_FILTER) {
+      const stillExists = usedApiProviders.some((p) => p.id === apiProviderFilter);
+      if (!stillExists) {
+        setApiProviderFilter(ALL_FILTER);
+      }
+    }
+  }, [usedApiProviders, apiProviderFilter]);
 
   const defaultTab: FilterTab = allLoginAccounts.length > 0 ? "logins" : "api-keys";
   const [activeTab, setActiveTab] = useState<FilterTab>(defaultTab);
@@ -170,35 +190,33 @@ export function VaultApp() {
               </div>
 
               <TabsContent value="logins" className="mt-4">
-                {loginAccounts.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    {allLoginAccounts.length === 0
+                <LoginTable
+                  key={loginTypeFilter}
+                  accounts={loginAccounts}
+                  onUpdate={updateAccount}
+                  onDelete={deleteAccount}
+                  onBulkDelete={deleteAccounts}
+                  emptyMessage={
+                    allLoginAccounts.length === 0
                       ? "No login accounts"
-                      : "No matching accounts"}
-                  </div>
-                ) : (
-                  <LoginTable
-                    accounts={loginAccounts}
-                    onUpdate={updateAccount}
-                    onDelete={deleteAccount}
-                  />
-                )}
+                      : "No matching accounts"
+                  }
+                />
               </TabsContent>
 
               <TabsContent value="api-keys" className="mt-4">
-                {apiKeyAccounts.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    {allApiKeyAccounts.length === 0
+                <ApiKeyTable
+                  key={apiProviderFilter}
+                  accounts={apiKeyAccounts}
+                  onUpdate={updateAccount}
+                  onDelete={deleteAccount}
+                  onBulkDelete={deleteAccounts}
+                  emptyMessage={
+                    allApiKeyAccounts.length === 0
                       ? "No API keys"
-                      : "No matching API keys"}
-                  </div>
-                ) : (
-                  <ApiKeyTable
-                    accounts={apiKeyAccounts}
-                    onUpdate={updateAccount}
-                    onDelete={deleteAccount}
-                  />
-                )}
+                      : "No matching API keys"
+                  }
+                />
               </TabsContent>
             </Tabs>
           )}

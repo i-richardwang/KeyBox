@@ -21,6 +21,7 @@ interface VaultActions {
   addAccount: (data: NewAccount) => void;
   updateAccount: (id: string, data: Partial<Omit<Account, "id" | "type" | "createdAt">>) => void;
   deleteAccount: (id: string) => void;
+  deleteAccounts: (ids: string[]) => void;
 
   addLoginType: (label: string, color: string) => TypeDefinition;
   updateLoginType: (id: string, data: Partial<Pick<TypeDefinition, "label" | "color">>) => void;
@@ -70,6 +71,13 @@ export const useVaultStore = create<VaultStore>()(
       deleteAccount: (id) => {
         set((state) => ({
           accounts: state.accounts.filter((account) => account.id !== id),
+        }));
+      },
+
+      deleteAccounts: (ids) => {
+        const idSet = new Set(ids);
+        set((state) => ({
+          accounts: state.accounts.filter((account) => !idSet.has(account.id)),
         }));
       },
 

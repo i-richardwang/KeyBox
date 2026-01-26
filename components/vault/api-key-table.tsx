@@ -1,43 +1,55 @@
 "use client";
 
-import { useState } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { MoreVerticalIcon, PencilEdit01Icon, Delete01Icon } from "@hugeicons/core-free-icons";
+import { useState, useMemo } from "react";
+import type { RowSelectionState } from "@tanstack/react-table";
 import type { ApiKeyAccount } from "@/lib/types/account";
-import { TypeBadge, useTypeInfo } from "./type-badge";
-import { SecretCell } from "./secret-cell";
-import { CopyButton } from "./copy-button";
+import { DataTable } from "./data-table";
+import { getApiKeyColumns } from "./columns/api-key-columns";
 import { AccountDialog } from "./account-dialog";
 import { DeleteDialog } from "./delete-dialog";
+import { BulkDeleteDialog } from "./bulk-delete-dialog";
+import { Button } from "@/components/ui/button";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Delete01Icon } from "@hugeicons/core-free-icons";
+import { useTypeInfo } from "./type-badge";
 import type { AccountFormData } from "./account-form";
 
 interface ApiKeyTableProps {
   accounts: ApiKeyAccount[];
   onUpdate: (id: string, data: Record<string, unknown>) => void;
   onDelete: (id: string) => void;
+  onBulkDelete: (ids: string[]) => void;
+  emptyMessage?: string;
 }
 
-export function ApiKeyTable({ accounts, onUpdate, onDelete }: ApiKeyTableProps) {
-  const [editingAccount, setEditingAccount] = useState<ApiKeyAccount | null>(null);
-  const [deletingAccount, setDeletingAccount] = useState<ApiKeyAccount | null>(null);
+export function ApiKeyTable({
+  accounts,
+  onUpdate,
+  onDelete,
+  onBulkDelete,
+  emptyMessage = "No API keys",
+}: ApiKeyTableProps) {
+  const [editingAccount, setEditingAccount] = useState<ApiKeyAccount | null>(
+    null
+  );
+  const [deletingAccount, setDeletingAccount] = useState<ApiKeyAccount | null>(
+    null
+  );
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
-  // Get label for the deleting account (hook must be called unconditionally)
   const deletingProviderInfo = useTypeInfo(deletingAccount?.provider ?? "");
+  const selectedIds = Object.keys(rowSelection);
+  const selectedCount = selectedIds.length;
+
+  const columns = useMemo(
+    () =>
+      getApiKeyColumns({
+        onEdit: setEditingAccount,
+        onDelete: setDeletingAccount,
+      }),
+    []
+  );
 
   const handleEditSubmit = (data: AccountFormData) => {
     if (!editingAccount) return;
@@ -55,68 +67,39 @@ export function ApiKeyTable({ accounts, onUpdate, onDelete }: ApiKeyTableProps) 
     }
   };
 
+  const handleBulkDeleteConfirm = () => {
+    onBulkDelete(selectedIds);
+    setRowSelection({});
+  };
+
   return (
     <>
-      <div className="rounded-xl border">
-        <Table className="table-fixed min-w-[720px]">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[15%]">Provider</TableHead>
-              <TableHead className="w-[55%]">API Key</TableHead>
-              <TableHead className="w-[25%]">Account</TableHead>
-              <TableHead className="w-[5%] text-right"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {accounts.map((account) => (
-              <TableRow key={account.id}>
-                <TableCell>
-                  <TypeBadge type={account.provider} />
-                </TableCell>
+      <DataTable
+        columns={columns}
+        data={accounts}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
+        getRowId={(row) => row.id}
+        emptyMessage={emptyMessage}
+      />
 
-                <TableCell>
-                  <SecretCell value={account.apiKey} label="API Key" />
-                </TableCell>
-
-                <TableCell>
-                  {account.account ? (
-                    <div className="flex items-center gap-1 min-w-0">
-                      <span className="truncate">{account.account}</span>
-                      <CopyButton value={account.account} label="Account" />
-                    </div>
-                  ) : (
-                    <span className="text-muted-foreground text-sm">—</span>
-                  )}
-                </TableCell>
-
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon-xs">
-                        <HugeiconsIcon icon={MoreVerticalIcon} strokeWidth={2} />
-                        <span className="sr-only">Actions</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => setEditingAccount(account)}>
-                        <HugeiconsIcon icon={PencilEdit01Icon} strokeWidth={2} />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => setDeletingAccount(account)}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        <HugeiconsIcon icon={Delete01Icon} strokeWidth={2} />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      {accounts.length > 0 && (
+        <div className="flex items-center justify-between py-4">
+          <div className="text-muted-foreground text-sm">
+            {selectedCount} of {accounts.length} row(s) selected.
+          </div>
+          {selectedCount > 0 && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setBulkDeleteOpen(true)}
+            >
+              <HugeiconsIcon icon={Delete01Icon} strokeWidth={2} />
+              Delete Selected ({selectedCount})
+            </Button>
+          )}
+        </div>
+      )}
 
       <AccountDialog
         open={!!editingAccount}
@@ -130,6 +113,14 @@ export function ApiKeyTable({ accounts, onUpdate, onDelete }: ApiKeyTableProps) 
         onOpenChange={(open) => !open && setDeletingAccount(null)}
         onConfirm={handleDeleteConfirm}
         accountName={deletingAccount ? deletingProviderInfo.label : ""}
+      />
+
+      <BulkDeleteDialog
+        open={bulkDeleteOpen}
+        onOpenChange={setBulkDeleteOpen}
+        onConfirm={handleBulkDeleteConfirm}
+        count={selectedCount}
+        itemType="API key"
       />
     </>
   );

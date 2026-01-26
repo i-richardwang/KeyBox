@@ -1,41 +1,53 @@
 "use client";
 
-import { useState } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { MoreVerticalIcon, PencilEdit01Icon, Delete01Icon } from "@hugeicons/core-free-icons";
+import { useState, useMemo } from "react";
+import type { RowSelectionState } from "@tanstack/react-table";
 import type { EmailAccount } from "@/lib/types/account";
-import { TypeBadge } from "./type-badge";
-import { PasswordCell } from "./password-cell";
-import { TotpDisplay } from "./totp-display";
-import { CopyButton } from "./copy-button";
+import { DataTable } from "./data-table";
+import { getLoginColumns } from "./columns/login-columns";
 import { AccountDialog } from "./account-dialog";
 import { DeleteDialog } from "./delete-dialog";
+import { BulkDeleteDialog } from "./bulk-delete-dialog";
+import { Button } from "@/components/ui/button";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Delete01Icon } from "@hugeicons/core-free-icons";
 import type { AccountFormData } from "./account-form";
 
 interface LoginTableProps {
   accounts: EmailAccount[];
   onUpdate: (id: string, data: Record<string, unknown>) => void;
   onDelete: (id: string) => void;
+  onBulkDelete: (ids: string[]) => void;
+  emptyMessage?: string;
 }
 
-export function LoginTable({ accounts, onUpdate, onDelete }: LoginTableProps) {
-  const [editingAccount, setEditingAccount] = useState<EmailAccount | null>(null);
-  const [deletingAccount, setDeletingAccount] = useState<EmailAccount | null>(null);
+export function LoginTable({
+  accounts,
+  onUpdate,
+  onDelete,
+  onBulkDelete,
+  emptyMessage = "No login accounts",
+}: LoginTableProps) {
+  const [editingAccount, setEditingAccount] = useState<EmailAccount | null>(
+    null
+  );
+  const [deletingAccount, setDeletingAccount] = useState<EmailAccount | null>(
+    null
+  );
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+
+  const selectedIds = Object.keys(rowSelection);
+  const selectedCount = selectedIds.length;
+
+  const columns = useMemo(
+    () =>
+      getLoginColumns({
+        onEdit: setEditingAccount,
+        onDelete: setDeletingAccount,
+      }),
+    []
+  );
 
   const handleEditSubmit = (data: AccountFormData) => {
     if (!editingAccount) return;
@@ -55,85 +67,39 @@ export function LoginTable({ accounts, onUpdate, onDelete }: LoginTableProps) {
     }
   };
 
+  const handleBulkDeleteConfirm = () => {
+    onBulkDelete(selectedIds);
+    setRowSelection({});
+  };
+
   return (
     <>
-      <div className="rounded-xl border">
-        <Table className="table-fixed min-w-[860px]">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[10%]">Type</TableHead>
-              <TableHead className="w-[28%]">Email</TableHead>
-              <TableHead className="w-[20%]">Password</TableHead>
-              <TableHead className="w-[20%]">Recovery</TableHead>
-              <TableHead className="w-[17%]">2FA</TableHead>
-              <TableHead className="w-[5%] text-right"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {accounts.map((account) => (
-              <TableRow key={account.id}>
-                <TableCell>
-                  <TypeBadge type={account.type} />
-                </TableCell>
+      <DataTable
+        columns={columns}
+        data={accounts}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
+        getRowId={(row) => row.id}
+        emptyMessage={emptyMessage}
+      />
 
-                <TableCell>
-                  <div className="flex items-center gap-1 min-w-0">
-                    <span className="font-medium truncate">{account.email}</span>
-                    <CopyButton value={account.email} label="Email" />
-                  </div>
-                </TableCell>
-
-                <TableCell>
-                  <PasswordCell value={account.password} label="Password" />
-                </TableCell>
-
-                <TableCell>
-                  {account.recoveryEmail ? (
-                    <div className="flex items-center gap-1 min-w-0">
-                      <span className="truncate">{account.recoveryEmail}</span>
-                      <CopyButton value={account.recoveryEmail} label="Recovery email" />
-                    </div>
-                  ) : (
-                    <span className="text-muted-foreground text-sm">—</span>
-                  )}
-                </TableCell>
-
-                <TableCell>
-                  {account.totpSecret ? (
-                    <TotpDisplay secret={account.totpSecret} />
-                  ) : (
-                    <span className="text-muted-foreground text-sm">—</span>
-                  )}
-                </TableCell>
-
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon-xs">
-                        <HugeiconsIcon icon={MoreVerticalIcon} strokeWidth={2} />
-                        <span className="sr-only">Actions</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => setEditingAccount(account)}>
-                        <HugeiconsIcon icon={PencilEdit01Icon} strokeWidth={2} />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => setDeletingAccount(account)}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        <HugeiconsIcon icon={Delete01Icon} strokeWidth={2} />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      {accounts.length > 0 && (
+        <div className="flex items-center justify-between py-4">
+          <div className="text-muted-foreground text-sm">
+            {selectedCount} of {accounts.length} row(s) selected.
+          </div>
+          {selectedCount > 0 && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setBulkDeleteOpen(true)}
+            >
+              <HugeiconsIcon icon={Delete01Icon} strokeWidth={2} />
+              Delete Selected ({selectedCount})
+            </Button>
+          )}
+        </div>
+      )}
 
       <AccountDialog
         open={!!editingAccount}
@@ -147,6 +113,14 @@ export function LoginTable({ accounts, onUpdate, onDelete }: LoginTableProps) {
         onOpenChange={(open) => !open && setDeletingAccount(null)}
         onConfirm={handleDeleteConfirm}
         accountName={deletingAccount?.email || ""}
+      />
+
+      <BulkDeleteDialog
+        open={bulkDeleteOpen}
+        onOpenChange={setBulkDeleteOpen}
+        onConfirm={handleBulkDeleteConfirm}
+        count={selectedCount}
+        itemType="account"
       />
     </>
   );
