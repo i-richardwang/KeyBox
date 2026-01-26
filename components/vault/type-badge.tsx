@@ -2,7 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { useVaultStore } from "@/lib/store";
-import type { ColorName } from "@/lib/types/account";
+import type { ColorName } from "@/lib/colors";
 
 interface TypeInfo {
   label: string;

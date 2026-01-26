@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { generateTotpCode, getTotpRemainingSeconds } from "@/lib/totp";
 import { CopyButton } from "./copy-button";
 
@@ -16,20 +16,24 @@ export function TotpDisplay({ secret }: TotpDisplayProps) {
   const [code, setCode] = useState(() => generateTotpCode(secret));
   const [remaining, setRemaining] = useState(() => getTotpRemainingSeconds());
 
+  // Use ref to track previous remaining value without triggering effect re-runs
+  const prevRemainingRef = useRef(remaining);
+
   useEffect(() => {
-    // Update every second
     const interval = setInterval(() => {
       const newRemaining = getTotpRemainingSeconds();
       setRemaining(newRemaining);
 
       // Regenerate code when timer resets (remaining jumped from low to high)
-      if (newRemaining === 30 || newRemaining > remaining) {
+      if (newRemaining === 30 || newRemaining > prevRemainingRef.current) {
         setCode(generateTotpCode(secret));
       }
+
+      prevRemainingRef.current = newRemaining;
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [secret, remaining]);
+  }, [secret]);
 
   // If code is empty, the secret is invalid
   if (!code) {

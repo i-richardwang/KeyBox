@@ -37,12 +37,17 @@ interface AccountFormProps {
   onCancel: () => void;
 }
 
-function getInitialValues(initialData?: Account) {
+interface DefaultTypes {
+  loginType: string;
+  provider: string;
+}
+
+function getInitialValues(initialData: Account | undefined, defaults: DefaultTypes) {
   if (!initialData) {
     return {
       category: "login" as AccountCategory,
-      loginType: "gmail",
-      provider: "openai",
+      loginType: defaults.loginType,
+      provider: defaults.provider,
       email: "",
       password: "",
       totpSecret: "",
@@ -54,7 +59,7 @@ function getInitialValues(initialData?: Account) {
     return {
       category: "login" as AccountCategory,
       loginType: initialData.type,
-      provider: "openai",
+      provider: defaults.provider,
       email: initialData.email,
       password: initialData.password,
       totpSecret: initialData.totpSecret || "",
@@ -64,7 +69,7 @@ function getInitialValues(initialData?: Account) {
 
   return {
     category: "api-key" as AccountCategory,
-    loginType: "gmail",
+    loginType: defaults.loginType,
     provider: initialData.provider,
     email: "",
     password: "",
@@ -76,7 +81,13 @@ function getInitialValues(initialData?: Account) {
 export function AccountForm({ initialData, onSubmit, onCancel }: AccountFormProps) {
   const { loginTypes, apiProviders, addLoginType, addApiProvider } = useVaultStore();
 
-  const initial = getInitialValues(initialData);
+  // Get first available type as default, fallback to empty string if none exist
+  const defaults: DefaultTypes = {
+    loginType: loginTypes[0]?.id ?? "",
+    provider: apiProviders[0]?.id ?? "",
+  };
+
+  const initial = getInitialValues(initialData, defaults);
 
   const [category, setCategory] = useState<AccountCategory>(initial.category);
   const [loginType, setLoginType] = useState<string>(initial.loginType);

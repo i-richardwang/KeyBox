@@ -65,6 +65,20 @@ export function parseImportFile(content: string): ExportData | null {
   }
 }
 
+function hasAccountChanges(existing: Account, imported: Account): boolean {
+  if (isEmailAccount(existing) && isEmailAccount(imported)) {
+    return (
+      existing.password !== imported.password ||
+      existing.totpSecret !== imported.totpSecret ||
+      existing.type !== imported.type
+    );
+  }
+  if (!isEmailAccount(existing) && !isEmailAccount(imported)) {
+    return existing.apiKey !== imported.apiKey;
+  }
+  return true;
+}
+
 export function mergeAccounts(
   existing: Account[],
   imported: Account[]
@@ -84,13 +98,15 @@ export function mergeAccounts(
     const existingAccount = existingMap.get(key);
 
     if (existingAccount) {
-      existingMap.set(key, {
-        ...importedAccount,
-        id: existingAccount.id,
-        createdAt: existingAccount.createdAt,
-        updatedAt: now,
-      } as Account);
-      updated++;
+      if (hasAccountChanges(existingAccount, importedAccount)) {
+        existingMap.set(key, {
+          ...importedAccount,
+          id: existingAccount.id,
+          createdAt: existingAccount.createdAt,
+          updatedAt: now,
+        } as Account);
+        updated++;
+      }
     } else {
       existingMap.set(key, {
         ...importedAccount,
@@ -109,11 +125,11 @@ export function mergeAccounts(
   };
 }
 
-export function mergeTypes<T extends { id: string; label: string }>(
-  existing: T[],
-  imported: T[]
-): { types: T[]; added: number; updated: number } {
-  const existingMap = new Map<string, T>();
+export function mergeTypes(
+  existing: TypeDefinition[],
+  imported: TypeDefinition[]
+): { types: TypeDefinition[]; added: number; updated: number } {
+  const existingMap = new Map<string, TypeDefinition>();
 
   for (const type of existing) {
     existingMap.set(type.label.toLowerCase(), type);
@@ -127,11 +143,14 @@ export function mergeTypes<T extends { id: string; label: string }>(
     const existingType = existingMap.get(key);
 
     if (existingType) {
-      existingMap.set(key, {
-        ...importedType,
-        id: existingType.id,
-      });
-      updated++;
+      // Only count as updated if color actually changed
+      if (existingType.color !== importedType.color) {
+        existingMap.set(key, {
+          ...importedType,
+          id: existingType.id,
+        });
+        updated++;
+      }
     } else {
       existingMap.set(key, importedType);
       added++;

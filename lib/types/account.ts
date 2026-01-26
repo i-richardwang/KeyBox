@@ -1,14 +1,3 @@
-// Color palette for types
-export const COLOR_PALETTE = [
-  "red", "orange", "amber", "yellow",
-  "lime", "green", "emerald", "teal",
-  "cyan", "sky", "blue", "indigo",
-  "violet", "purple", "fuchsia", "pink",
-  "rose", "slate",
-] as const;
-
-export type ColorName = (typeof COLOR_PALETTE)[number];
-
 // Type definition for login types and API providers
 export interface TypeDefinition {
   id: string;

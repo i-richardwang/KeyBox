@@ -14,8 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { COLOR_PALETTE, type ColorName } from "@/lib/types/account";
-import { COLOR_HEX } from "@/lib/colors";
+import { COLOR_PALETTE, type ColorName, COLOR_HEX } from "@/lib/colors";
 import { cn } from "@/lib/utils";
 
 interface TypeDialogProps {

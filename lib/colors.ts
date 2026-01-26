@@ -1,4 +1,13 @@
-import type { ColorName } from "@/lib/types/account";
+// Color palette for types
+export const COLOR_PALETTE = [
+  "red", "orange", "amber", "yellow",
+  "lime", "green", "emerald", "teal",
+  "cyan", "sky", "blue", "indigo",
+  "violet", "purple", "fuchsia", "pink",
+  "rose", "slate",
+] as const;
+
+export type ColorName = (typeof COLOR_PALETTE)[number];
 
 /**
  * Badge style classes for each color
