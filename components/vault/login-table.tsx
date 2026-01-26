@@ -43,6 +43,7 @@ export function LoginTable({ accounts, onUpdate, onDelete }: LoginTableProps) {
       email: data.email,
       password: data.password,
       totpSecret: data.totpSecret,
+      recoveryEmail: data.recoveryEmail,
     });
     setEditingAccount(null);
   };
@@ -57,14 +58,15 @@ export function LoginTable({ accounts, onUpdate, onDelete }: LoginTableProps) {
   return (
     <>
       <div className="rounded-xl border">
-        <Table>
+        <Table className="table-fixed min-w-[860px]">
           <TableHeader>
             <TableRow>
-              <TableHead className="w-24">Type</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Password</TableHead>
-              <TableHead>2FA</TableHead>
-              <TableHead className="w-12"></TableHead>
+              <TableHead className="w-[10%]">Type</TableHead>
+              <TableHead className="w-[28%]">Email</TableHead>
+              <TableHead className="w-[20%]">Password</TableHead>
+              <TableHead className="w-[20%]">Recovery</TableHead>
+              <TableHead className="w-[17%]">2FA</TableHead>
+              <TableHead className="w-[5%] text-right"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -75,14 +77,25 @@ export function LoginTable({ accounts, onUpdate, onDelete }: LoginTableProps) {
                 </TableCell>
 
                 <TableCell>
-                  <div className="flex items-center gap-1">
-                    <span className="font-medium">{account.email}</span>
+                  <div className="flex items-center gap-1 min-w-0">
+                    <span className="font-medium truncate">{account.email}</span>
                     <CopyButton value={account.email} label="Email" />
                   </div>
                 </TableCell>
 
                 <TableCell>
                   <PasswordCell value={account.password} label="Password" />
+                </TableCell>
+
+                <TableCell>
+                  {account.recoveryEmail ? (
+                    <div className="flex items-center gap-1 min-w-0">
+                      <span className="truncate">{account.recoveryEmail}</span>
+                      <CopyButton value={account.recoveryEmail} label="Recovery email" />
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground text-sm">—</span>
+                  )}
                 </TableCell>
 
                 <TableCell>
@@ -93,7 +106,7 @@ export function LoginTable({ accounts, onUpdate, onDelete }: LoginTableProps) {
                   )}
                 </TableCell>
 
-                <TableCell>
+                <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon-xs">

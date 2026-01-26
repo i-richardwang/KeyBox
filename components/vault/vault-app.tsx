@@ -47,6 +47,7 @@ export function VaultApp() {
         type: "api-key",
         provider: data.provider!,
         apiKey: data.apiKey!,
+        account: data.apiAccount,
       });
     } else {
       addAccount({
@@ -54,6 +55,7 @@ export function VaultApp() {
         email: data.email!,
         password: data.password!,
         totpSecret: data.totpSecret,
+        recoveryEmail: data.recoveryEmail,
       });
     }
   };

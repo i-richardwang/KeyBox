@@ -70,11 +70,15 @@ function hasAccountChanges(existing: Account, imported: Account): boolean {
     return (
       existing.password !== imported.password ||
       existing.totpSecret !== imported.totpSecret ||
+      existing.recoveryEmail !== imported.recoveryEmail ||
       existing.type !== imported.type
     );
   }
   if (!isEmailAccount(existing) && !isEmailAccount(imported)) {
-    return existing.apiKey !== imported.apiKey;
+    return (
+      existing.apiKey !== imported.apiKey ||
+      existing.account !== imported.account
+    );
   }
   return true;
 }

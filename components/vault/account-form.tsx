@@ -28,7 +28,9 @@ export interface AccountFormData {
   email?: string;
   password?: string;
   totpSecret?: string;
+  recoveryEmail?: string;
   apiKey?: string;
+  apiAccount?: string;
 }
 
 interface AccountFormProps {
@@ -51,7 +53,9 @@ function getInitialValues(initialData: Account | undefined, defaults: DefaultTyp
       email: "",
       password: "",
       totpSecret: "",
+      recoveryEmail: "",
       apiKey: "",
+      apiAccount: "",
     };
   }
 
@@ -63,7 +67,9 @@ function getInitialValues(initialData: Account | undefined, defaults: DefaultTyp
       email: initialData.email,
       password: initialData.password,
       totpSecret: initialData.totpSecret || "",
+      recoveryEmail: initialData.recoveryEmail || "",
       apiKey: "",
+      apiAccount: "",
     };
   }
 
@@ -74,7 +80,9 @@ function getInitialValues(initialData: Account | undefined, defaults: DefaultTyp
     email: "",
     password: "",
     totpSecret: "",
+    recoveryEmail: "",
     apiKey: initialData.apiKey,
+    apiAccount: initialData.account || "",
   };
 }
 
@@ -95,14 +103,28 @@ export function AccountForm({ initialData, onSubmit, onCancel }: AccountFormProp
   const [email, setEmail] = useState(initial.email);
   const [password, setPassword] = useState(initial.password);
   const [totpSecret, setTotpSecret] = useState(initial.totpSecret);
+  const [recoveryEmail, setRecoveryEmail] = useState(initial.recoveryEmail);
   const [apiKey, setApiKey] = useState(initial.apiKey);
+  const [apiAccount, setApiAccount] = useState(initial.apiAccount);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (category === "api-key") {
-      onSubmit({ category, provider, apiKey });
+      onSubmit({
+        category,
+        provider,
+        apiKey,
+        apiAccount: apiAccount || undefined,
+      });
     } else {
-      onSubmit({ category, loginType, email, password, totpSecret: totpSecret || undefined });
+      onSubmit({
+        category,
+        loginType,
+        email,
+        password,
+        totpSecret: totpSecret || undefined,
+        recoveryEmail: recoveryEmail || undefined,
+      });
     }
   };
 
@@ -150,6 +172,19 @@ export function AccountForm({ initialData, onSubmit, onCancel }: AccountFormProp
               onChange={(e) => setEmail(e.target.value)}
               placeholder="example@gmail.com"
               required
+            />
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="recoveryEmail">
+              Recovery Email <span className="text-muted-foreground font-normal">(optional)</span>
+            </FieldLabel>
+            <Input
+              id="recoveryEmail"
+              type="email"
+              value={recoveryEmail}
+              onChange={(e) => setRecoveryEmail(e.target.value)}
+              placeholder="recovery@example.com"
             />
           </Field>
 
@@ -203,6 +238,19 @@ export function AccountForm({ initialData, onSubmit, onCancel }: AccountFormProp
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="Enter API key"
               required
+            />
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="apiAccount">
+              Account <span className="text-muted-foreground font-normal">(optional)</span>
+            </FieldLabel>
+            <Input
+              id="apiAccount"
+              type="email"
+              value={apiAccount}
+              onChange={(e) => setApiAccount(e.target.value)}
+              placeholder="account@example.com"
             />
           </Field>
         </>

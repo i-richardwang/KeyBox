@@ -19,6 +19,7 @@ export interface EmailAccount extends BaseAccount {
   email: string;
   password: string;
   totpSecret?: string;
+  recoveryEmail?: string;
 }
 
 // API Key account
@@ -26,6 +27,7 @@ export interface ApiKeyAccount extends BaseAccount {
   type: "api-key";
   provider: string;
   apiKey: string;
+  account?: string;
 }
 
 // Union type for all account types

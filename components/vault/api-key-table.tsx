@@ -21,6 +21,7 @@ import { MoreVerticalIcon, PencilEdit01Icon, Delete01Icon } from "@hugeicons/cor
 import type { ApiKeyAccount } from "@/lib/types/account";
 import { TypeBadge, useTypeInfo } from "./type-badge";
 import { SecretCell } from "./secret-cell";
+import { CopyButton } from "./copy-button";
 import { AccountDialog } from "./account-dialog";
 import { DeleteDialog } from "./delete-dialog";
 import type { AccountFormData } from "./account-form";
@@ -42,6 +43,7 @@ export function ApiKeyTable({ accounts, onUpdate, onDelete }: ApiKeyTableProps) 
     if (!editingAccount) return;
     onUpdate(editingAccount.id, {
       apiKey: data.apiKey,
+      account: data.apiAccount,
     });
     setEditingAccount(null);
   };
@@ -56,12 +58,13 @@ export function ApiKeyTable({ accounts, onUpdate, onDelete }: ApiKeyTableProps) 
   return (
     <>
       <div className="rounded-xl border">
-        <Table>
+        <Table className="table-fixed min-w-[720px]">
           <TableHeader>
             <TableRow>
-              <TableHead className="w-28">Provider</TableHead>
-              <TableHead>API Key</TableHead>
-              <TableHead className="w-12"></TableHead>
+              <TableHead className="w-[15%]">Provider</TableHead>
+              <TableHead className="w-[55%]">API Key</TableHead>
+              <TableHead className="w-[25%]">Account</TableHead>
+              <TableHead className="w-[5%] text-right"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -76,6 +79,17 @@ export function ApiKeyTable({ accounts, onUpdate, onDelete }: ApiKeyTableProps) 
                 </TableCell>
 
                 <TableCell>
+                  {account.account ? (
+                    <div className="flex items-center gap-1 min-w-0">
+                      <span className="truncate">{account.account}</span>
+                      <CopyButton value={account.account} label="Account" />
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground text-sm">—</span>
+                  )}
+                </TableCell>
+
+                <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon-xs">
