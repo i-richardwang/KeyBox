@@ -21,7 +21,7 @@ function getAccountKey(account: Account): string {
   if (isEmailAccount(account)) {
     return `email:${account.email.toLowerCase()}`;
   }
-  return `api:${account.provider.toLowerCase()}`;
+  return `api:${account.apiKey}`;
 }
 
 function validateImportData(data: unknown): data is ExportData {
