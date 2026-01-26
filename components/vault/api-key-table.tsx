@@ -10,9 +10,10 @@ import { DeleteDialog } from "./delete-dialog";
 import { BulkDeleteDialog } from "./bulk-delete-dialog";
 import { Button } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Delete01Icon } from "@hugeicons/core-free-icons";
+import { Delete01Icon, Copy01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { useTypeInfo } from "./type-badge";
 import type { AccountFormData } from "./account-form";
+import { toast } from "sonner";
 
 interface ApiKeyTableProps {
   accounts: ApiKeyAccount[];
@@ -37,10 +38,26 @@ export function ApiKeyTable({
   );
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const deletingProviderInfo = useTypeInfo(deletingAccount?.provider ?? "");
   const selectedIds = Object.keys(rowSelection);
   const selectedCount = selectedIds.length;
+
+  const handleBulkCopy = async () => {
+    const selectedKeys = accounts
+      .filter((account) => selectedIds.includes(account.id))
+      .map((account) => account.apiKey);
+    
+    try {
+      await navigator.clipboard.writeText(selectedKeys.join("\n"));
+      setCopied(true);
+      toast.success(`${selectedKeys.length} API key(s) copied`);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Failed to copy");
+    }
+  };
 
   const columns = useMemo(
     () =>
@@ -89,14 +106,24 @@ export function ApiKeyTable({
             {selectedCount} of {accounts.length} row(s) selected.
           </div>
           {selectedCount > 0 && (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => setBulkDeleteOpen(true)}
-            >
-              <HugeiconsIcon icon={Delete01Icon} strokeWidth={2} />
-              Delete Selected ({selectedCount})
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleBulkCopy}
+              >
+                <HugeiconsIcon icon={copied ? Tick02Icon : Copy01Icon} strokeWidth={2} />
+                Copy Keys
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setBulkDeleteOpen(true)}
+              >
+                <HugeiconsIcon icon={Delete01Icon} strokeWidth={2} />
+                Delete Selected
+              </Button>
+            </div>
           )}
         </div>
       )}

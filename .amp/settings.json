@@ -1,0 +1,11 @@
+{
+  "amp.mcpServers": {
+    "project-mcp": {
+      "command": "npx",
+      "args": [
+        "shadcn@latest",
+        "mcp"
+      ]
+    }
+  }
+}

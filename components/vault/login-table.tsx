@@ -95,7 +95,7 @@ export function LoginTable({
               onClick={() => setBulkDeleteOpen(true)}
             >
               <HugeiconsIcon icon={Delete01Icon} strokeWidth={2} />
-              Delete Selected ({selectedCount})
+              Delete Selected
             </Button>
           )}
         </div>
