@@ -136,7 +136,7 @@ export const useVaultStore = create<VaultStore>()(
 
         const data: ExportData = {
           version: 1,
-          source: "vault-key",
+          source: "keybox",
           exportedAt: Date.now(),
           accounts,
           loginTypes,
@@ -148,7 +148,7 @@ export const useVaultStore = create<VaultStore>()(
         const url = URL.createObjectURL(blob);
 
         const date = new Date().toISOString().split("T")[0];
-        const filename = `vault-key-${date}.json`;
+        const filename = `keybox-${date}.json`;
 
         const link = document.createElement("a");
         link.href = url;
@@ -209,7 +209,7 @@ export const useVaultStore = create<VaultStore>()(
       },
     }),
     {
-      name: "vault-key-data",
+      name: "keybox-data",
     }
   )
 );

@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Vault Key",
+  title: "KeyBox",
   description: "Local account and password manager",
 };
 

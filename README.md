@@ -1,36 +1,87 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# KeyBox
+
+A local, privacy-first password and API key manager that runs entirely in your browser.
+
+## Features
+
+- **Login Account Management** - Store email accounts with passwords, recovery emails, and 2FA secrets
+- **API Key Management** - Organize API keys for various providers (OpenAI, Anthropic, etc.)
+- **TOTP Support** - Generate live 2FA codes with countdown timer
+- **Custom Types** - Create custom login types and API providers with color labels
+- **Import/Export** - Backup and restore your data in JSON format
+- **100% Local** - All data stored in browser localStorage, nothing sent to servers
+
+## Tech Stack
+
+- [Next.js](https://nextjs.org/) - React framework
+- [React](https://react.dev/) - UI library
+- [TypeScript](https://www.typescriptlang.org/) - Type safety
+- [Tailwind CSS](https://tailwindcss.com/) - Styling
+- [shadcn/ui](https://ui.shadcn.com/) - UI components
+- [Zustand](https://zustand-demo.pmnd.rs/) - State management
+- [otplib](https://github.com/yeojz/otplib) - TOTP generation
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+ or Bun
+
+### Installation
 
 ```bash
-npm run dev
+# Clone the repository
+git clone https://github.com/i-richardwang/KeyBox.git
+cd keybox
+
+# Install dependencies
+bun install
 # or
-yarn dev
-# or
-pnpm dev
-# or
+npm install
+
+# Start development server
 bun dev
+# or
+npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Build for Production
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+bun run build
+bun start
+```
 
-## Learn More
+## Usage
 
-To learn more about Next.js, take a look at the following resources:
+### Adding Accounts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Click **Add Account** button
+2. Select account type (Login or API Key)
+3. Fill in the required fields
+4. Click **Save**
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Managing Types
 
-## Deploy on Vercel
+1. Click the **Settings** icon in the header
+2. Add, edit, or delete login types and API providers
+3. Customize colors for each type
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Import/Export
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Export**: Click the menu (three dots) > Export to download a JSON backup
+- **Import**: Click the menu > Import to restore from a JSON file
+
+## Security
+
+KeyBox stores all data locally in your browser's localStorage. No data is ever transmitted to external servers. However, please note:
+
+- Data is not encrypted at rest in localStorage
+- Anyone with access to your browser can view the stored data
+- For sensitive credentials, consider using a dedicated password manager with encryption
+
+## License
+
+MIT

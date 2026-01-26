@@ -3,7 +3,7 @@ import { isEmailAccount } from "@/lib/types/account";
 
 export interface ExportData {
   version: 1;
-  source: "vault-key";
+  source: "keybox";
   exportedAt: number;
   accounts: Account[];
   loginTypes?: TypeDefinition[];
