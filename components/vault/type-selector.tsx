@@ -27,7 +27,7 @@ interface TypeSelectorProps {
   value: string;
   onChange: (value: string) => void;
   types: TypeDefinition[];
-  onAddType: (label: string, color: string) => TypeDefinition;
+  onAddType: (label: string, color: string) => TypeDefinition | Promise<TypeDefinition>;
   placeholder?: string;
   disabled?: boolean;
   addDialogTitle: string;
@@ -55,8 +55,8 @@ export function TypeSelector({
 
   const selectedType = types.find((t) => t.id === value);
 
-  const handleAddType = (label: string, color: string) => {
-    const newType = onAddType(label, color);
+  const handleAddType = async (label: string, color: string) => {
+    const newType = await onAddType(label, color);
     onChange(newType.id);
   };
 

@@ -17,9 +17,9 @@ import { toast } from "sonner";
 
 interface ApiKeyTableProps {
   accounts: ApiKeyAccount[];
-  onUpdate: (id: string, data: Record<string, unknown>) => void;
-  onDelete: (id: string) => void;
-  onBulkDelete: (ids: string[]) => void;
+  onUpdate: (id: string, data: Record<string, unknown>) => void | Promise<void>;
+  onDelete: (id: string) => void | Promise<void>;
+  onBulkDelete: (ids: string[]) => void | Promise<void>;
   emptyMessage?: string;
 }
 
@@ -68,24 +68,24 @@ export function ApiKeyTable({
     []
   );
 
-  const handleEditSubmit = (data: AccountFormData) => {
+  const handleEditSubmit = async (data: AccountFormData) => {
     if (!editingAccount) return;
-    onUpdate(editingAccount.id, {
+    await onUpdate(editingAccount.id, {
       apiKey: data.apiKey,
       account: data.apiAccount,
     });
     setEditingAccount(null);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (deletingAccount) {
-      onDelete(deletingAccount.id);
+      await onDelete(deletingAccount.id);
       setDeletingAccount(null);
     }
   };
 
-  const handleBulkDeleteConfirm = () => {
-    onBulkDelete(selectedIds);
+  const handleBulkDeleteConfirm = async () => {
+    await onBulkDelete(selectedIds);
     setRowSelection({});
   };
 

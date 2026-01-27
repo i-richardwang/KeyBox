@@ -1,6 +1,6 @@
 # KeyBox
 
-A local, privacy-first password and API key manager that runs entirely in your browser.
+A privacy-first password and API key manager with PostgreSQL database storage.
 
 ## Features
 
@@ -9,7 +9,8 @@ A local, privacy-first password and API key manager that runs entirely in your b
 - **TOTP Support** - Generate live 2FA codes with countdown timer
 - **Custom Types** - Create custom login types and API providers with color labels
 - **Import/Export** - Backup and restore your data in JSON format
-- **100% Local** - All data stored in browser localStorage, nothing sent to servers
+- **Password Protection** - Optional password authentication
+- **PostgreSQL Storage** - Persistent database storage with DrizzleORM
 
 ## Tech Stack
 
@@ -19,6 +20,7 @@ A local, privacy-first password and API key manager that runs entirely in your b
 - [Tailwind CSS](https://tailwindcss.com/) - Styling
 - [shadcn/ui](https://ui.shadcn.com/) - UI components
 - [Zustand](https://zustand-demo.pmnd.rs/) - State management
+- [DrizzleORM](https://orm.drizzle.team/) - Database ORM
 - [otplib](https://github.com/yeojz/otplib) - TOTP generation
 
 ## Getting Started
@@ -26,6 +28,7 @@ A local, privacy-first password and API key manager that runs entirely in your b
 ### Prerequisites
 
 - Node.js 18+ or Bun
+- PostgreSQL database
 
 ### Installation
 
@@ -39,7 +42,27 @@ bun install
 # or
 npm install
 
-# Start development server
+# Copy environment variables
+cp env.example .env.local
+
+# Edit .env.local with your database connection
+# DATABASE_URL=postgresql://user:password@localhost:5432/keybox
+```
+
+### Database Setup
+
+```bash
+# Push schema to database
+bun run db:push
+
+# Or generate and run migrations
+bun run db:generate
+bun run db:migrate
+```
+
+### Development
+
+```bash
 bun dev
 # or
 npm run dev
@@ -53,6 +76,13 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 bun run build
 bun start
 ```
+
+## Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `DATABASE_URL` | PostgreSQL connection string | Yes |
+| `AUTH_PASSWORD` | Password for authentication (optional) | No |
 
 ## Usage
 
@@ -74,13 +104,18 @@ bun start
 - **Export**: Click the menu (three dots) > Export to download a JSON backup
 - **Import**: Click the menu > Import to restore from a JSON file
 
-## Security
+### Password Protection
 
-KeyBox stores all data locally in your browser's localStorage. No data is ever transmitted to external servers. However, please note:
+Set `AUTH_PASSWORD` environment variable to enable password protection. Users will need to enter the password to access the vault.
 
-- Data is not encrypted at rest in localStorage
-- Anyone with access to your browser can view the stored data
-- For sensitive credentials, consider using a dedicated password manager with encryption
+## Database Scripts
+
+| Command | Description |
+|---------|-------------|
+| `bun run db:generate` | Generate migration files |
+| `bun run db:migrate` | Run migrations |
+| `bun run db:push` | Push schema directly to database |
+| `bun run db:studio` | Open Drizzle Studio |
 
 ## License
 

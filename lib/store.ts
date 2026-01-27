@@ -1,11 +1,6 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import type { Account, NewAccount, TypeDefinition } from "@/lib/types/account";
-import { DEFAULT_LOGIN_TYPES, DEFAULT_API_PROVIDERS } from "@/lib/types/account";
 import {
-  parseImportFile,
-  mergeAccounts,
-  mergeTypes,
   readFileAsText,
   type ImportResult,
   type ExportData,
@@ -15,21 +10,24 @@ interface VaultState {
   accounts: Account[];
   loginTypes: TypeDefinition[];
   apiProviders: TypeDefinition[];
+  isLoading: boolean;
+  isInitialized: boolean;
 }
 
 interface VaultActions {
-  addAccount: (data: NewAccount) => void;
-  updateAccount: (id: string, data: Partial<Omit<Account, "id" | "type" | "createdAt">>) => void;
-  deleteAccount: (id: string) => void;
-  deleteAccounts: (ids: string[]) => void;
+  fetchData: () => Promise<void>;
+  addAccount: (data: NewAccount) => Promise<void>;
+  updateAccount: (id: string, data: Partial<Omit<Account, "id" | "type" | "createdAt">>) => Promise<void>;
+  deleteAccount: (id: string) => Promise<void>;
+  deleteAccounts: (ids: string[]) => Promise<void>;
 
-  addLoginType: (label: string, color: string) => TypeDefinition;
-  updateLoginType: (id: string, data: Partial<Pick<TypeDefinition, "label" | "color">>) => void;
-  deleteLoginType: (id: string) => void;
+  addLoginType: (label: string, color: string) => Promise<TypeDefinition>;
+  updateLoginType: (id: string, data: Partial<Pick<TypeDefinition, "label" | "color">>) => Promise<void>;
+  deleteLoginType: (id: string) => Promise<void>;
 
-  addApiProvider: (label: string, color: string) => TypeDefinition;
-  updateApiProvider: (id: string, data: Partial<Pick<TypeDefinition, "label" | "color">>) => void;
-  deleteApiProvider: (id: string) => void;
+  addApiProvider: (label: string, color: string) => Promise<TypeDefinition>;
+  updateApiProvider: (id: string, data: Partial<Pick<TypeDefinition, "label" | "color">>) => Promise<void>;
+  deleteApiProvider: (id: string) => Promise<void>;
 
   exportData: () => void;
   importData: (file: File) => Promise<ImportResult>;
@@ -37,187 +35,231 @@ interface VaultActions {
 
 type VaultStore = VaultState & VaultActions;
 
-export const useVaultStore = create<VaultStore>()(
-  persist(
-    (set, get) => ({
-      accounts: [],
-      loginTypes: [...DEFAULT_LOGIN_TYPES],
-      apiProviders: [...DEFAULT_API_PROVIDERS],
+export const useVaultStore = create<VaultStore>()((set, get) => ({
+  accounts: [],
+  loginTypes: [],
+  apiProviders: [],
+  isLoading: false,
+  isInitialized: false,
 
-      addAccount: (data) => {
-        const now = Date.now();
-        const account = {
-          ...data,
-          id: crypto.randomUUID(),
-          createdAt: now,
-          updatedAt: now,
-        } as Account;
-
-        set((state) => ({
-          accounts: [...state.accounts, account],
-        }));
-      },
-
-      updateAccount: (id, data) => {
-        set((state) => ({
-          accounts: state.accounts.map((account) =>
-            account.id === id
-              ? { ...account, ...data, updatedAt: Date.now() }
-              : account
-          ) as Account[],
-        }));
-      },
-
-      deleteAccount: (id) => {
-        set((state) => ({
-          accounts: state.accounts.filter((account) => account.id !== id),
-        }));
-      },
-
-      deleteAccounts: (ids) => {
-        const idSet = new Set(ids);
-        set((state) => ({
-          accounts: state.accounts.filter((account) => !idSet.has(account.id)),
-        }));
-      },
-
-      addLoginType: (label, color) => {
-        const newType: TypeDefinition = {
-          id: `login-${crypto.randomUUID()}`,
-          label,
-          color,
-          createdAt: Date.now(),
-        };
-
-        set((state) => ({
-          loginTypes: [...state.loginTypes, newType],
-        }));
-
-        return newType;
-      },
-
-      updateLoginType: (id, data) => {
-        set((state) => ({
-          loginTypes: state.loginTypes.map((t) =>
-            t.id === id ? { ...t, ...data } : t
-          ),
-        }));
-      },
-
-      deleteLoginType: (id) => {
-        set((state) => ({
-          loginTypes: state.loginTypes.filter((t) => t.id !== id),
-        }));
-      },
-
-      addApiProvider: (label, color) => {
-        const newProvider: TypeDefinition = {
-          id: `api-${crypto.randomUUID()}`,
-          label,
-          color,
-          createdAt: Date.now(),
-        };
-
-        set((state) => ({
-          apiProviders: [...state.apiProviders, newProvider],
-        }));
-
-        return newProvider;
-      },
-
-      updateApiProvider: (id, data) => {
-        set((state) => ({
-          apiProviders: state.apiProviders.map((p) =>
-            p.id === id ? { ...p, ...data } : p
-          ),
-        }));
-      },
-
-      deleteApiProvider: (id) => {
-        set((state) => ({
-          apiProviders: state.apiProviders.filter((p) => p.id !== id),
-        }));
-      },
-
-      exportData: () => {
-        const { accounts, loginTypes, apiProviders } = get();
-
-        const data: ExportData = {
-          version: 1,
-          source: "keybox",
-          exportedAt: Date.now(),
-          accounts,
-          loginTypes,
-          apiProviders,
-        };
-
-        const json = JSON.stringify(data, null, 2);
-        const blob = new Blob([json], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-
-        const date = new Date().toISOString().split("T")[0];
-        const filename = `keybox-${date}.json`;
-
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = filename;
-        link.click();
-
-        URL.revokeObjectURL(url);
-      },
-
-      importData: async (file) => {
-        try {
-          const content = await readFileAsText(file);
-          const data = parseImportFile(content);
-
-          if (!data) {
-            return { success: false, added: 0, updated: 0, error: "Invalid file format" };
-          }
-
-          const { accounts, loginTypes, apiProviders } = get();
-
-          const {
-            accounts: mergedAccounts,
-            added: accountsAdded,
-            updated: accountsUpdated,
-          } = mergeAccounts(accounts, data.accounts);
-
-          let totalAdded = accountsAdded;
-          let totalUpdated = accountsUpdated;
-
-          const importedLoginTypes = data.loginTypes ?? [];
-          const importedApiProviders = data.apiProviders ?? [];
-
-          const {
-            types: mergedLoginTypes,
-            added: loginAdded,
-            updated: loginUpdated,
-          } = mergeTypes(loginTypes, importedLoginTypes);
-
-          const {
-            types: mergedApiProviders,
-            added: apiAdded,
-            updated: apiUpdated,
-          } = mergeTypes(apiProviders, importedApiProviders);
-
-          totalAdded += loginAdded + apiAdded;
-          totalUpdated += loginUpdated + apiUpdated;
-
-          set({
-            accounts: mergedAccounts,
-            loginTypes: mergedLoginTypes,
-            apiProviders: mergedApiProviders,
-          });
-
-          return { success: true, added: totalAdded, updated: totalUpdated };
-        } catch {
-          return { success: false, added: 0, updated: 0, error: "Failed to read file" };
-        }
-      },
-    }),
-    {
-      name: "keybox-data",
+  fetchData: async () => {
+    if (get().isLoading) return;
+    set({ isLoading: true });
+    try {
+      const res = await fetch("/api/data");
+      if (!res.ok) throw new Error("Failed to fetch data");
+      const data = await res.json();
+      set({
+        accounts: data.accounts,
+        loginTypes: data.loginTypes,
+        apiProviders: data.apiProviders,
+        isInitialized: true,
+      });
+    } catch (error) {
+      console.error("Failed to fetch data:", error);
+    } finally {
+      set({ isLoading: false });
     }
-  )
-);
+  },
+
+  addAccount: async (data) => {
+    const res = await fetch("/api/accounts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    if (!res.ok) throw new Error("Failed to create account");
+    const account = await res.json();
+
+    set((state) => ({
+      accounts: [...state.accounts, account],
+    }));
+  },
+
+  updateAccount: async (id, data) => {
+    const res = await fetch(`/api/accounts/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    if (!res.ok) throw new Error("Failed to update account");
+
+    set((state) => ({
+      accounts: state.accounts.map((account) =>
+        account.id === id
+          ? { ...account, ...data, updatedAt: Date.now() }
+          : account
+      ) as Account[],
+    }));
+  },
+
+  deleteAccount: async (id) => {
+    const res = await fetch(`/api/accounts/${id}`, {
+      method: "DELETE",
+    });
+
+    if (!res.ok) throw new Error("Failed to delete account");
+
+    set((state) => ({
+      accounts: state.accounts.filter((account) => account.id !== id),
+    }));
+  },
+
+  deleteAccounts: async (ids) => {
+    const res = await fetch("/api/accounts", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids }),
+    });
+
+    if (!res.ok) throw new Error("Failed to delete accounts");
+
+    const idSet = new Set(ids);
+    set((state) => ({
+      accounts: state.accounts.filter((account) => !idSet.has(account.id)),
+    }));
+  },
+
+  addLoginType: async (label, color) => {
+    const res = await fetch("/api/login-types", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ label, color }),
+    });
+
+    if (!res.ok) throw new Error("Failed to create login type");
+    const newType = await res.json();
+
+    set((state) => ({
+      loginTypes: [...state.loginTypes, newType],
+    }));
+
+    return newType;
+  },
+
+  updateLoginType: async (id, data) => {
+    const res = await fetch(`/api/login-types/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    if (!res.ok) throw new Error("Failed to update login type");
+
+    set((state) => ({
+      loginTypes: state.loginTypes.map((t) =>
+        t.id === id ? { ...t, ...data } : t
+      ),
+    }));
+  },
+
+  deleteLoginType: async (id) => {
+    const res = await fetch(`/api/login-types/${id}`, {
+      method: "DELETE",
+    });
+
+    if (!res.ok) throw new Error("Failed to delete login type");
+
+    set((state) => ({
+      loginTypes: state.loginTypes.filter((t) => t.id !== id),
+    }));
+  },
+
+  addApiProvider: async (label, color) => {
+    const res = await fetch("/api/api-providers", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ label, color }),
+    });
+
+    if (!res.ok) throw new Error("Failed to create API provider");
+    const newProvider = await res.json();
+
+    set((state) => ({
+      apiProviders: [...state.apiProviders, newProvider],
+    }));
+
+    return newProvider;
+  },
+
+  updateApiProvider: async (id, data) => {
+    const res = await fetch(`/api/api-providers/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    if (!res.ok) throw new Error("Failed to update API provider");
+
+    set((state) => ({
+      apiProviders: state.apiProviders.map((p) =>
+        p.id === id ? { ...p, ...data } : p
+      ),
+    }));
+  },
+
+  deleteApiProvider: async (id) => {
+    const res = await fetch(`/api/api-providers/${id}`, {
+      method: "DELETE",
+    });
+
+    if (!res.ok) throw new Error("Failed to delete API provider");
+
+    set((state) => ({
+      apiProviders: state.apiProviders.filter((p) => p.id !== id),
+    }));
+  },
+
+  exportData: () => {
+    const { accounts, loginTypes, apiProviders } = get();
+
+    const data: ExportData = {
+      version: 1,
+      source: "keybox",
+      exportedAt: Date.now(),
+      accounts,
+      loginTypes,
+      apiProviders,
+    };
+
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const date = new Date().toISOString().split("T")[0];
+    const filename = `keybox-${date}.json`;
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.click();
+
+    URL.revokeObjectURL(url);
+  },
+
+  importData: async (file) => {
+    try {
+      const content = await readFileAsText(file);
+
+      const res = await fetch("/api/data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content }),
+      });
+
+      const result = await res.json();
+
+      if (!result.success) {
+        return { success: false, added: 0, updated: 0, error: result.error };
+      }
+
+      await get().fetchData();
+
+      return { success: true, added: result.added, updated: result.updated };
+    } catch {
+      return { success: false, added: 0, updated: 0, error: "Failed to read file" };
+    }
+  },
+}));

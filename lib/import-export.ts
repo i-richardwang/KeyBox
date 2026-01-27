@@ -1,5 +1,4 @@
 import type { Account, TypeDefinition } from "@/lib/types/account";
-import { isEmailAccount } from "@/lib/types/account";
 
 export interface ExportData {
   version: 1;
@@ -15,13 +14,6 @@ export interface ImportResult {
   added: number;
   updated: number;
   error?: string;
-}
-
-function getAccountKey(account: Account): string {
-  if (isEmailAccount(account)) {
-    return `email:${account.email.toLowerCase()}`;
-  }
-  return `api:${account.apiKey}`;
 }
 
 function validateImportData(data: unknown): data is ExportData {
@@ -63,109 +55,6 @@ export function parseImportFile(content: string): ExportData | null {
   } catch {
     return null;
   }
-}
-
-function hasAccountChanges(existing: Account, imported: Account): boolean {
-  if (isEmailAccount(existing) && isEmailAccount(imported)) {
-    return (
-      existing.password !== imported.password ||
-      existing.totpSecret !== imported.totpSecret ||
-      existing.recoveryEmail !== imported.recoveryEmail ||
-      existing.type !== imported.type
-    );
-  }
-  if (!isEmailAccount(existing) && !isEmailAccount(imported)) {
-    return (
-      existing.apiKey !== imported.apiKey ||
-      existing.account !== imported.account
-    );
-  }
-  return true;
-}
-
-export function mergeAccounts(
-  existing: Account[],
-  imported: Account[]
-): { accounts: Account[]; added: number; updated: number } {
-  const now = Date.now();
-  const existingMap = new Map<string, Account>();
-
-  for (const account of existing) {
-    existingMap.set(getAccountKey(account), account);
-  }
-
-  let added = 0;
-  let updated = 0;
-
-  for (const importedAccount of imported) {
-    const key = getAccountKey(importedAccount);
-    const existingAccount = existingMap.get(key);
-
-    if (existingAccount) {
-      if (hasAccountChanges(existingAccount, importedAccount)) {
-        existingMap.set(key, {
-          ...importedAccount,
-          id: existingAccount.id,
-          createdAt: existingAccount.createdAt,
-          updatedAt: now,
-        } as Account);
-        updated++;
-      }
-    } else {
-      existingMap.set(key, {
-        ...importedAccount,
-        id: crypto.randomUUID(),
-        createdAt: now,
-        updatedAt: now,
-      } as Account);
-      added++;
-    }
-  }
-
-  return {
-    accounts: Array.from(existingMap.values()),
-    added,
-    updated,
-  };
-}
-
-export function mergeTypes(
-  existing: TypeDefinition[],
-  imported: TypeDefinition[]
-): { types: TypeDefinition[]; added: number; updated: number } {
-  const existingMap = new Map<string, TypeDefinition>();
-
-  for (const type of existing) {
-    existingMap.set(type.label.toLowerCase(), type);
-  }
-
-  let added = 0;
-  let updated = 0;
-
-  for (const importedType of imported) {
-    const key = importedType.label.toLowerCase();
-    const existingType = existingMap.get(key);
-
-    if (existingType) {
-      // Only count as updated if color actually changed
-      if (existingType.color !== importedType.color) {
-        existingMap.set(key, {
-          ...importedType,
-          id: existingType.id,
-        });
-        updated++;
-      }
-    } else {
-      existingMap.set(key, importedType);
-      added++;
-    }
-  }
-
-  return {
-    types: Array.from(existingMap.values()),
-    added,
-    updated,
-  };
 }
 
 export function readFileAsText(file: File): Promise<string> {

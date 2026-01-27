@@ -29,6 +29,9 @@ export function VaultApp() {
     accounts,
     loginTypes,
     apiProviders,
+    isLoading,
+    isInitialized,
+    fetchData,
     addAccount,
     updateAccount,
     deleteAccount,
@@ -38,6 +41,10 @@ export function VaultApp() {
   } = useVaultStore();
 
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
   const [loginTypeFilter, setLoginTypeFilter] = useState<string>(ALL_FILTER);
   const [apiProviderFilter, setApiProviderFilter] = useState<string>(ALL_FILTER);
 
@@ -101,22 +108,26 @@ export function VaultApp() {
   const defaultTab: FilterTab = allLoginAccounts.length > 0 ? "logins" : "api-keys";
   const [activeTab, setActiveTab] = useState<FilterTab>(defaultTab);
 
-  const handleAdd = (data: AccountFormData) => {
-    if (data.category === "api-key") {
-      addAccount({
-        type: "api-key",
-        provider: data.provider!,
-        apiKey: data.apiKey!,
-        account: data.apiAccount,
-      });
-    } else {
-      addAccount({
-        type: data.loginType!,
-        email: data.email!,
-        password: data.password!,
-        totpSecret: data.totpSecret,
-        recoveryEmail: data.recoveryEmail,
-      });
+  const handleAdd = async (data: AccountFormData) => {
+    try {
+      if (data.category === "api-key") {
+        await addAccount({
+          type: "api-key",
+          provider: data.provider!,
+          apiKey: data.apiKey!,
+          account: data.apiAccount,
+        });
+      } else {
+        await addAccount({
+          type: data.loginType!,
+          email: data.email!,
+          password: data.password!,
+          totpSecret: data.totpSecret,
+          recoveryEmail: data.recoveryEmail,
+        });
+      }
+    } catch {
+      toast.error("Failed to add account");
     }
   };
 
@@ -134,6 +145,14 @@ export function VaultApp() {
       toast.error("Import failed", { description: result.error });
     }
   };
+
+  if (!isInitialized || isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

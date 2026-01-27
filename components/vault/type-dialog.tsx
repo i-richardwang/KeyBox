@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 interface TypeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (label: string, color: string) => void;
+  onSubmit: (label: string, color: string) => void | Promise<void>;
   title: string;
   description?: string;
   placeholder?: string;
@@ -51,8 +51,8 @@ export function TypeDialog({
             initialLabel={initialLabel ?? ""}
             initialColor={initialColor ?? "blue"}
             placeholder={placeholder}
-            onSubmit={(label, color) => {
-              onSubmit(label, color);
+            onSubmit={async (label, color) => {
+              await onSubmit(label, color);
               onOpenChange(false);
             }}
           />
@@ -66,7 +66,7 @@ interface TypeFormProps {
   initialLabel: string;
   initialColor: string;
   placeholder: string;
-  onSubmit: (label: string, color: string) => void;
+  onSubmit: (label: string, color: string) => void | Promise<void>;
 }
 
 function TypeForm({
@@ -80,10 +80,10 @@ function TypeForm({
 
   const isEdit = initialLabel !== "";
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (label.trim()) {
-      onSubmit(label.trim(), color);
+      await onSubmit(label.trim(), color);
     }
   };
 

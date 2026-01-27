@@ -15,9 +15,9 @@ import type { AccountFormData } from "./account-form";
 
 interface LoginTableProps {
   accounts: EmailAccount[];
-  onUpdate: (id: string, data: Record<string, unknown>) => void;
-  onDelete: (id: string) => void;
-  onBulkDelete: (ids: string[]) => void;
+  onUpdate: (id: string, data: Record<string, unknown>) => void | Promise<void>;
+  onDelete: (id: string) => void | Promise<void>;
+  onBulkDelete: (ids: string[]) => void | Promise<void>;
   emptyMessage?: string;
 }
 
@@ -49,9 +49,9 @@ export function LoginTable({
     []
   );
 
-  const handleEditSubmit = (data: AccountFormData) => {
+  const handleEditSubmit = async (data: AccountFormData) => {
     if (!editingAccount) return;
-    onUpdate(editingAccount.id, {
+    await onUpdate(editingAccount.id, {
       email: data.email,
       password: data.password,
       totpSecret: data.totpSecret,
@@ -60,15 +60,15 @@ export function LoginTable({
     setEditingAccount(null);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (deletingAccount) {
-      onDelete(deletingAccount.id);
+      await onDelete(deletingAccount.id);
       setDeletingAccount(null);
     }
   };
 
-  const handleBulkDeleteConfirm = () => {
-    onBulkDelete(selectedIds);
+  const handleBulkDeleteConfirm = async () => {
+    await onBulkDelete(selectedIds);
     setRowSelection({});
   };
 

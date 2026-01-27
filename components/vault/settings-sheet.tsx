@@ -179,7 +179,9 @@ export function SettingsSheet() {
       <TypeDialog
         open={addLoginDialogOpen}
         onOpenChange={setAddLoginDialogOpen}
-        onSubmit={addLoginType}
+        onSubmit={async (label, color) => {
+          await addLoginType(label, color);
+        }}
         title="Add Login Type"
         placeholder="e.g., iCloud, GitHub"
       />
@@ -187,7 +189,9 @@ export function SettingsSheet() {
       <TypeDialog
         open={addApiDialogOpen}
         onOpenChange={setAddApiDialogOpen}
-        onSubmit={addApiProvider}
+        onSubmit={async (label, color) => {
+          await addApiProvider(label, color);
+        }}
         title="Add API Provider"
         placeholder="e.g., GitHub, Stripe"
       />
@@ -195,9 +199,9 @@ export function SettingsSheet() {
       <TypeDialog
         open={!!editingLoginType}
         onOpenChange={(open) => !open && setEditingLoginType(null)}
-        onSubmit={(label, color) => {
+        onSubmit={async (label, color) => {
           if (editingLoginType) {
-            updateLoginType(editingLoginType.id, { label, color });
+            await updateLoginType(editingLoginType.id, { label, color });
             setEditingLoginType(null);
           }
         }}
@@ -209,9 +213,9 @@ export function SettingsSheet() {
       <TypeDialog
         open={!!editingApiProvider}
         onOpenChange={(open) => !open && setEditingApiProvider(null)}
-        onSubmit={(label, color) => {
+        onSubmit={async (label, color) => {
           if (editingApiProvider) {
-            updateApiProvider(editingApiProvider.id, { label, color });
+            await updateApiProvider(editingApiProvider.id, { label, color });
             setEditingApiProvider(null);
           }
         }}
@@ -223,9 +227,9 @@ export function SettingsSheet() {
       <DeleteDialog
         open={!!deletingLoginType}
         onOpenChange={(open) => !open && setDeletingLoginType(null)}
-        onConfirm={() => {
+        onConfirm={async () => {
           if (deletingLoginType) {
-            deleteLoginType(deletingLoginType.id);
+            await deleteLoginType(deletingLoginType.id);
             setDeletingLoginType(null);
           }
         }}
@@ -235,9 +239,9 @@ export function SettingsSheet() {
       <DeleteDialog
         open={!!deletingApiProvider}
         onOpenChange={(open) => !open && setDeletingApiProvider(null)}
-        onConfirm={() => {
+        onConfirm={async () => {
           if (deletingApiProvider) {
-            deleteApiProvider(deletingApiProvider.id);
+            await deleteApiProvider(deletingApiProvider.id);
             setDeletingApiProvider(null);
           }
         }}
