@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { useQueryState, parseAsStringLiteral } from "nuqs";
 import { toast } from "sonner";
 import { useVaultStore } from "@/lib/store";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -21,7 +22,6 @@ import type { EmailAccount, ApiKeyAccount } from "@/lib/types/account";
 import { isApiKeyAccount, isEmailAccount } from "@/lib/types/account";
 import type { ImportResult } from "@/lib/import-export";
 
-type FilterTab = "logins" | "api-keys";
 const ALL_FILTER = "all";
 
 export function VaultApp() {
@@ -98,8 +98,11 @@ export function VaultApp() {
     }
   }, [usedApiProviders, apiProviderFilter]);
 
-  const defaultTab: FilterTab = allLoginAccounts.length > 0 ? "logins" : "api-keys";
-  const [activeTab, setActiveTab] = useState<FilterTab>(defaultTab);
+  const filterTabs = ["logins", "api-keys"] as const;
+  const [activeTab, setActiveTab] = useQueryState(
+    "tab",
+    parseAsStringLiteral(filterTabs).withDefault("logins")
+  );
 
   const handleAdd = (data: AccountFormData) => {
     if (data.category === "api-key") {
@@ -149,7 +152,7 @@ export function VaultApp() {
           {accounts.length === 0 ? (
             <EmptyState onAddClick={() => setAddDialogOpen(true)} />
           ) : (
-            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as FilterTab)}>
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
               <div className="flex items-center justify-between">
                 <TabsList>
                   <TabsTrigger value="logins">Logins</TabsTrigger>
