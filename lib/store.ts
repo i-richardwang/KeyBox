@@ -22,6 +22,7 @@ interface VaultActions {
   updateAccount: (id: string, data: Partial<Omit<Account, "id" | "type" | "createdAt">>) => void;
   deleteAccount: (id: string) => void;
   deleteAccounts: (ids: string[]) => void;
+  updateAccounts: (ids: string[], data: { type?: string; provider?: string }) => void;
 
   addLoginType: (label: string, color: string) => TypeDefinition;
   updateLoginType: (id: string, data: Partial<Pick<TypeDefinition, "label" | "color">>) => void;
@@ -78,6 +79,23 @@ export const useVaultStore = create<VaultStore>()(
         const idSet = new Set(ids);
         set((state) => ({
           accounts: state.accounts.filter((account) => !idSet.has(account.id)),
+        }));
+      },
+
+      updateAccounts: (ids, data) => {
+        const idSet = new Set(ids);
+        const now = Date.now();
+        set((state) => ({
+          accounts: state.accounts.map((account) => {
+            if (!idSet.has(account.id)) return account;
+            if (data.type !== undefined && account.type !== "api-key") {
+              return { ...account, type: data.type, updatedAt: now };
+            }
+            if (data.provider !== undefined && account.type === "api-key") {
+              return { ...account, provider: data.provider, updatedAt: now };
+            }
+            return account;
+          }) as Account[],
         }));
       },
 
