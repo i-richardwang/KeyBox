@@ -16,17 +16,11 @@ const MASK = "••••••••••••••••••••••
 
 /**
  * A cell for displaying long secrets (API keys, etc.) with reveal toggle and copy.
- * Designed for longer values - shows truncated preview when revealed.
  */
 export function SecretCell({ value, label }: SecretCellProps) {
   const [revealed, setRevealed] = useState(false);
 
-  // Show first 16 and last 8 characters when revealed, for long keys
-  const displayValue = revealed
-    ? value.length > 32
-      ? `${value.slice(0, 16)}...${value.slice(-8)}`
-      : value
-    : MASK;
+  const displayValue = revealed ? value : MASK;
 
   return (
     <div className="flex items-center gap-1">
