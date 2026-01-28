@@ -54,6 +54,14 @@ export async function DELETE(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const { ids, data } = await request.json();
+    
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return NextResponse.json({ error: "Invalid ids" }, { status: 400 });
+    }
+    if (!data || typeof data !== "object") {
+      return NextResponse.json({ error: "Invalid data" }, { status: 400 });
+    }
+    
     await updateAccounts(ids, data);
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -137,13 +137,7 @@ export const useVaultStore = create<VaultStore>()((set, get) => ({
     set((state) => ({
       accounts: state.accounts.map((account) => {
         if (!idSet.has(account.id)) return account;
-        if (data.type !== undefined && account.type !== "api-key") {
-          return { ...account, type: data.type, updatedAt: now };
-        }
-        if (data.provider !== undefined && account.type === "api-key") {
-          return { ...account, provider: data.provider, updatedAt: now };
-        }
-        return account;
+        return { ...account, ...data, updatedAt: now };
       }) as Account[],
     }));
   },
