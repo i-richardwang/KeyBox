@@ -81,6 +81,26 @@ export async function deleteAccounts(ids: string[]): Promise<void> {
   await db.delete(accounts).where(inArray(accounts.id, ids));
 }
 
+export async function updateAccounts(
+  ids: string[],
+  data: { type?: string; provider?: string }
+): Promise<void> {
+  if (ids.length === 0) return;
+  const now = Date.now();
+  
+  if (data.type !== undefined) {
+    await db.update(accounts)
+      .set({ type: data.type, updatedAt: now })
+      .where(inArray(accounts.id, ids));
+  }
+  
+  if (data.provider !== undefined) {
+    await db.update(accounts)
+      .set({ provider: data.provider, updatedAt: now })
+      .where(inArray(accounts.id, ids));
+  }
+}
+
 export async function getAllLoginTypes(): Promise<TypeDefinition[]> {
   const rows = await db.select().from(loginTypes);
   return rows.map(dbTypeToTypeDefinition);

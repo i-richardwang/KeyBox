@@ -36,6 +36,7 @@ export function VaultApp() {
     updateAccount,
     deleteAccount,
     deleteAccounts,
+    updateAccounts,
     exportData,
     importData,
   } = useVaultStore();
@@ -218,6 +219,7 @@ export function VaultApp() {
                   onUpdate={updateAccount}
                   onDelete={deleteAccount}
                   onBulkDelete={deleteAccounts}
+                  onBulkUpdate={updateAccounts}
                   emptyMessage={
                     allLoginAccounts.length === 0
                       ? "No login accounts"
@@ -233,6 +235,7 @@ export function VaultApp() {
                   onUpdate={updateAccount}
                   onDelete={deleteAccount}
                   onBulkDelete={deleteAccounts}
+                  onBulkUpdate={updateAccounts}
                   emptyMessage={
                     allApiKeyAccounts.length === 0
                       ? "No API keys"

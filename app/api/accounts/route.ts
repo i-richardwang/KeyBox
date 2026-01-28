@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAccount, deleteAccounts } from "@/lib/db/queries";
+import { createAccount, deleteAccounts, updateAccounts } from "@/lib/db/queries";
 import type { Account, EmailAccount, ApiKeyAccount } from "@/lib/types/account";
 
 export async function POST(request: NextRequest) {
@@ -48,5 +48,16 @@ export async function DELETE(request: NextRequest) {
   } catch (error) {
     console.error("Failed to delete accounts:", error);
     return NextResponse.json({ error: "Failed to delete accounts" }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const { ids, data } = await request.json();
+    await updateAccounts(ids, data);
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Failed to update accounts:", error);
+    return NextResponse.json({ error: "Failed to update accounts" }, { status: 500 });
   }
 }

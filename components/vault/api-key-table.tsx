@@ -8,9 +8,10 @@ import { getApiKeyColumns } from "./columns/api-key-columns";
 import { AccountDialog } from "./account-dialog";
 import { DeleteDialog } from "./delete-dialog";
 import { BulkDeleteDialog } from "./bulk-delete-dialog";
+import { BulkEditDialog } from "./bulk-edit-dialog";
 import { Button } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Delete01Icon, Copy01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { Delete01Icon, Copy01Icon, Tick02Icon, PencilEdit01Icon } from "@hugeicons/core-free-icons";
 import { useTypeInfo } from "./type-badge";
 import type { AccountFormData } from "./account-form";
 import { toast } from "sonner";
@@ -20,6 +21,7 @@ interface ApiKeyTableProps {
   onUpdate: (id: string, data: Record<string, unknown>) => void | Promise<void>;
   onDelete: (id: string) => void | Promise<void>;
   onBulkDelete: (ids: string[]) => void | Promise<void>;
+  onBulkUpdate: (ids: string[], data: { type?: string; provider?: string }) => void | Promise<void>;
   emptyMessage?: string;
 }
 
@@ -28,6 +30,7 @@ export function ApiKeyTable({
   onUpdate,
   onDelete,
   onBulkDelete,
+  onBulkUpdate,
   emptyMessage = "No API keys",
 }: ApiKeyTableProps) {
   const [editingAccount, setEditingAccount] = useState<ApiKeyAccount | null>(
@@ -38,6 +41,7 @@ export function ApiKeyTable({
   );
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkEditOpen, setBulkEditOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const deletingProviderInfo = useTypeInfo(deletingAccount?.provider ?? "");
@@ -89,6 +93,11 @@ export function ApiKeyTable({
     setRowSelection({});
   };
 
+  const handleBulkEditConfirm = async (data: { type?: string; provider?: string }) => {
+    await onBulkUpdate(selectedIds, data);
+    setRowSelection({});
+  };
+
   return (
     <>
       <DataTable
@@ -114,6 +123,14 @@ export function ApiKeyTable({
               >
                 <HugeiconsIcon icon={copied ? Tick02Icon : Copy01Icon} strokeWidth={2} />
                 Copy Keys
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setBulkEditOpen(true)}
+              >
+                <HugeiconsIcon icon={PencilEdit01Icon} strokeWidth={2} />
+                Edit Selected
               </Button>
               <Button
                 variant="destructive"
@@ -148,6 +165,14 @@ export function ApiKeyTable({
         onConfirm={handleBulkDeleteConfirm}
         count={selectedCount}
         itemType="API key"
+      />
+
+      <BulkEditDialog
+        open={bulkEditOpen}
+        onOpenChange={setBulkEditOpen}
+        onConfirm={handleBulkEditConfirm}
+        count={selectedCount}
+        mode="api-key"
       />
     </>
   );
