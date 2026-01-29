@@ -1,11 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import {
   flexRender,
   getCoreRowModel,
+  getPaginationRowModel,
   useReactTable,
   type ColumnDef,
   type RowSelectionState,
+  type PaginationState,
 } from "@tanstack/react-table";
 import {
   Table,
@@ -16,6 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { DataTablePagination } from "./data-table-pagination";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -24,6 +28,7 @@ interface DataTableProps<TData, TValue> {
   onRowSelectionChange: (selection: RowSelectionState) => void;
   getRowId: (row: TData) => string;
   emptyMessage?: string;
+  defaultPageSize?: number;
 }
 
 export function DataTable<TData, TValue>({
@@ -33,23 +38,33 @@ export function DataTable<TData, TValue>({
   onRowSelectionChange,
   getRowId,
   emptyMessage = "No results.",
+  defaultPageSize = 10,
 }: DataTableProps<TData, TValue>) {
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: defaultPageSize,
+  });
+
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     onRowSelectionChange: (updater) => {
       const newSelection =
         typeof updater === "function" ? updater(rowSelection) : updater;
       onRowSelectionChange(newSelection);
     },
+    onPaginationChange: setPagination,
     getRowId,
     state: {
       rowSelection,
+      pagination,
     },
   });
 
   return (
+    <>
     <div className="rounded-xl border overflow-x-auto">
       <Table>
         <TableHeader>
@@ -120,5 +135,8 @@ export function DataTable<TData, TValue>({
         </TableBody>
       </Table>
     </div>
+
+    {data.length > 0 && <DataTablePagination table={table} />}
+  </>
   );
 }
