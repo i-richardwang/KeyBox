@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Account, NewAccount, TypeDefinition } from "@/lib/types/account";
+import type { Account, NewAccount, TypeDefinition, EmailAccount, ApiKeyAccount } from "@/lib/types/account";
 import {
   readFileAsText,
   type ImportResult,
@@ -17,7 +17,8 @@ interface VaultState {
 interface VaultActions {
   fetchData: () => Promise<void>;
   addAccount: (data: NewAccount) => Promise<void>;
-  updateAccount: (id: string, data: Partial<Omit<Account, "id" | "type" | "createdAt">>) => Promise<void>;
+  updateEmailAccount: (id: string, data: Partial<Pick<EmailAccount, "type" | "email" | "password" | "totpSecret" | "recoveryEmail">>) => Promise<void>;
+  updateApiKeyAccount: (id: string, data: Partial<Pick<ApiKeyAccount, "provider" | "apiKey" | "account">>) => Promise<void>;
   deleteAccount: (id: string) => Promise<void>;
   deleteAccounts: (ids: string[]) => Promise<void>;
   updateAccounts: (ids: string[], data: { type?: string; provider?: string }) => Promise<void>;
@@ -78,7 +79,7 @@ export const useVaultStore = create<VaultStore>()((set, get) => ({
     }));
   },
 
-  updateAccount: async (id, data) => {
+  updateEmailAccount: async (id, data) => {
     const res = await fetch(`/api/accounts/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -89,7 +90,25 @@ export const useVaultStore = create<VaultStore>()((set, get) => ({
 
     set((state) => ({
       accounts: state.accounts.map((account) =>
-        account.id === id
+        account.id === id && account.type !== "api-key"
+          ? { ...account, ...data, updatedAt: Date.now() }
+          : account
+      ) as Account[],
+    }));
+  },
+
+  updateApiKeyAccount: async (id, data) => {
+    const res = await fetch(`/api/accounts/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    if (!res.ok) throw new Error("Failed to update account");
+
+    set((state) => ({
+      accounts: state.accounts.map((account) =>
+        account.id === id && account.type === "api-key"
           ? { ...account, ...data, updatedAt: Date.now() }
           : account
       ) as Account[],

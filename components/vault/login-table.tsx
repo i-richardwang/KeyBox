@@ -14,9 +14,11 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Delete01Icon, PencilEdit01Icon } from "@hugeicons/core-free-icons";
 import type { AccountFormData } from "./account-form";
 
+type EmailAccountUpdateData = Partial<Pick<EmailAccount, "type" | "email" | "password" | "totpSecret" | "recoveryEmail">>;
+
 interface LoginTableProps {
   accounts: EmailAccount[];
-  onUpdate: (id: string, data: Record<string, unknown>) => void | Promise<void>;
+  onUpdate: (id: string, data: EmailAccountUpdateData) => void | Promise<void>;
   onDelete: (id: string) => void | Promise<void>;
   onBulkDelete: (ids: string[]) => void | Promise<void>;
   onBulkUpdate: (ids: string[], data: { type?: string; provider?: string }) => void | Promise<void>;
@@ -56,6 +58,7 @@ export function LoginTable({
   const handleEditSubmit = async (data: AccountFormData) => {
     if (!editingAccount) return;
     await onUpdate(editingAccount.id, {
+      type: data.loginType,
       email: data.email,
       password: data.password,
       totpSecret: data.totpSecret,

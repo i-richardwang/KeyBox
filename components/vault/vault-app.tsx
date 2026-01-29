@@ -33,7 +33,8 @@ export function VaultApp() {
     isInitialized,
     fetchData,
     addAccount,
-    updateAccount,
+    updateEmailAccount,
+    updateApiKeyAccount,
     deleteAccount,
     deleteAccounts,
     updateAccounts,
@@ -216,7 +217,7 @@ export function VaultApp() {
                 <LoginTable
                   key={loginTypeFilter}
                   accounts={loginAccounts}
-                  onUpdate={updateAccount}
+                  onUpdate={updateEmailAccount}
                   onDelete={deleteAccount}
                   onBulkDelete={deleteAccounts}
                   onBulkUpdate={updateAccounts}
@@ -232,7 +233,7 @@ export function VaultApp() {
                 <ApiKeyTable
                   key={apiProviderFilter}
                   accounts={apiKeyAccounts}
-                  onUpdate={updateAccount}
+                  onUpdate={updateApiKeyAccount}
                   onDelete={deleteAccount}
                   onBulkDelete={deleteAccounts}
                   onBulkUpdate={updateAccounts}
