@@ -29,7 +29,6 @@ interface TypeSelectorProps {
   types: TypeDefinition[];
   onAddType: (label: string, color: string) => TypeDefinition | Promise<TypeDefinition>;
   placeholder?: string;
-  disabled?: boolean;
   addDialogTitle: string;
   addDialogPlaceholder: string;
 }
@@ -46,7 +45,6 @@ export function TypeSelector({
   types,
   onAddType,
   placeholder = "Select type...",
-  disabled = false,
   addDialogTitle,
   addDialogPlaceholder,
 }: TypeSelectorProps) {
@@ -68,7 +66,6 @@ export function TypeSelector({
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            disabled={disabled}
             className="w-full justify-between font-normal"
           >
             {selectedType ? (
