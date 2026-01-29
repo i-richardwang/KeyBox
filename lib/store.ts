@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { Account, NewAccount, TypeDefinition } from "@/lib/types/account";
+import type { Account, NewAccount, TypeDefinition, EmailAccount, ApiKeyAccount } from "@/lib/types/account";
 import { DEFAULT_LOGIN_TYPES, DEFAULT_API_PROVIDERS } from "@/lib/types/account";
 import {
   parseImportFile,
@@ -19,7 +19,8 @@ interface VaultState {
 
 interface VaultActions {
   addAccount: (data: NewAccount) => void;
-  updateAccount: (id: string, data: Partial<Omit<Account, "id" | "type" | "createdAt">>) => void;
+  updateEmailAccount: (id: string, data: Partial<Pick<EmailAccount, "type" | "email" | "password" | "totpSecret" | "recoveryEmail">>) => void;
+  updateApiKeyAccount: (id: string, data: Partial<Pick<ApiKeyAccount, "provider" | "apiKey" | "account">>) => void;
   deleteAccount: (id: string) => void;
   deleteAccounts: (ids: string[]) => void;
   updateAccounts: (ids: string[], data: { type?: string; provider?: string }) => void;
@@ -59,10 +60,20 @@ export const useVaultStore = create<VaultStore>()(
         }));
       },
 
-      updateAccount: (id, data) => {
+      updateEmailAccount: (id, data) => {
         set((state) => ({
           accounts: state.accounts.map((account) =>
-            account.id === id
+            account.id === id && account.type !== "api-key"
+              ? { ...account, ...data, updatedAt: Date.now() }
+              : account
+          ) as Account[],
+        }));
+      },
+
+      updateApiKeyAccount: (id, data) => {
+        set((state) => ({
+          accounts: state.accounts.map((account) =>
+            account.id === id && account.type === "api-key"
               ? { ...account, ...data, updatedAt: Date.now() }
               : account
           ) as Account[],

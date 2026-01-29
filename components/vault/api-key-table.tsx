@@ -16,9 +16,11 @@ import { useTypeInfo } from "./type-badge";
 import type { AccountFormData } from "./account-form";
 import { toast } from "sonner";
 
+type ApiKeyAccountUpdateData = Partial<Pick<ApiKeyAccount, "provider" | "apiKey" | "account">>;
+
 interface ApiKeyTableProps {
   accounts: ApiKeyAccount[];
-  onUpdate: (id: string, data: Record<string, unknown>) => void;
+  onUpdate: (id: string, data: ApiKeyAccountUpdateData) => void;
   onDelete: (id: string) => void;
   onBulkDelete: (ids: string[]) => void;
   onBulkUpdate: (ids: string[], data: { type?: string; provider?: string }) => void;
@@ -75,6 +77,7 @@ export function ApiKeyTable({
   const handleEditSubmit = (data: AccountFormData) => {
     if (!editingAccount) return;
     onUpdate(editingAccount.id, {
+      provider: data.provider,
       apiKey: data.apiKey,
       account: data.apiAccount,
     });
