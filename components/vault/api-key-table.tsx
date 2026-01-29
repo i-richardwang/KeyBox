@@ -112,39 +112,32 @@ export function ApiKeyTable({
         emptyMessage={emptyMessage}
       />
 
-      {accounts.length > 0 && (
-        <div className="flex items-center justify-between py-4">
-          <div className="text-muted-foreground text-sm">
-            {selectedCount} of {accounts.length} row(s) selected.
-          </div>
-          {selectedCount > 0 && (
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleBulkCopy}
-              >
-                <HugeiconsIcon icon={copied ? Tick02Icon : Copy01Icon} strokeWidth={2} />
-                Copy Keys
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setBulkEditOpen(true)}
-              >
-                <HugeiconsIcon icon={PencilEdit01Icon} strokeWidth={2} />
-                Edit Selected
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => setBulkDeleteOpen(true)}
-              >
-                <HugeiconsIcon icon={Delete01Icon} strokeWidth={2} />
-                Delete Selected
-              </Button>
-            </div>
-          )}
+      {selectedCount > 0 && (
+        <div className="flex items-center justify-end gap-2 -mt-2 mb-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleBulkCopy}
+          >
+            <HugeiconsIcon icon={copied ? Tick02Icon : Copy01Icon} strokeWidth={2} />
+            Copy Keys
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setBulkEditOpen(true)}
+          >
+            <HugeiconsIcon icon={PencilEdit01Icon} strokeWidth={2} />
+            Edit Selected
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => setBulkDeleteOpen(true)}
+          >
+            <HugeiconsIcon icon={Delete01Icon} strokeWidth={2} />
+            Delete Selected
+          </Button>
         </div>
       )}
 
