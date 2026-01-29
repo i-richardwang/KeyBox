@@ -157,7 +157,6 @@ export function AccountForm({ initialData, onSubmit, onCancel }: AccountFormProp
               types={loginTypes}
               onAddType={addLoginType}
               placeholder="Select type..."
-              disabled={!!initialData}
               addDialogTitle="Add Login Type"
               addDialogPlaceholder="e.g., iCloud, GitHub"
             />
@@ -223,7 +222,6 @@ export function AccountForm({ initialData, onSubmit, onCancel }: AccountFormProp
               types={apiProviders}
               onAddType={addApiProvider}
               placeholder="Select provider..."
-              disabled={!!initialData}
               addDialogTitle="Add API Provider"
               addDialogPlaceholder="e.g., GitHub, Stripe"
             />
